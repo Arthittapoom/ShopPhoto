@@ -1,202 +1,273 @@
 <template>
     <div class="signup-page">
-        <div class="signup-container">
-            <h2 class="pb-4">สมัครสมาชิก</h2>
-            <form @submit.prevent="handleSubmit">
-                <div class="input-group">
-                    <input type="text" id="username" v-model="username" placeholder="ชื่อผู้ใช้" class="input-field"
-                        required />
-                </div>
-
-                <div class="input-group">
-                    <input type="text" id="fullname" v-model="fullname" placeholder="ชื่อ-นามสกุล" class="input-field"
-                        required />
-                </div>
-
-                <div class="input-group">
-                    <input type="email" id="email" v-model="email" placeholder="อีเมล" class="input-field" required />
-                </div>
-
-                <div class="input-group">
-                    <input type="tel" id="phone" v-model="phone" placeholder="เบอร์โทร" class="input-field" required />
-                </div>
-
-                <div class="input-group">
-                    <input type="password" id="password" v-model="password" placeholder="รหัสผ่าน" class="input-field"
-                        required />
-                </div>
-
-                <div class="input-group">
-                    <input type="password" id="confirmPassword" v-model="confirmPassword" placeholder="ยืนยันรหัสผ่าน"
-                        class="input-field" required />
-                </div>
-
-                <button type="submit" class="signup-button mt-4 mb-4">สมัครสมาชิก</button>
-
-                <hr>
-
-                <p class="forgot-password">มีบัญชีอยู่แล้ว <NuxtLink to="/login" class="text-p">เข้าสู่ระบบ</NuxtLink>
-                </p>
-
-            </form>
+      <div class="image-section"></div>
+      <div class="signup-container">
+        <div class="auth-header">
+            <nuxt-link to="/login" class="auth-link">SIGN IN</nuxt-link>
+            <nuxt-link to="/signup" class="auth-link1 active">REGISTER</nuxt-link>
         </div>
+  
+        <h2 class="welcome-text">Welcome Block</h2>
+  
+        <form @submit.prevent="handleSubmit">
+          <div class="input-group">
+            <input
+              type="text"
+              id="username"
+              v-model="username"
+              placeholder="Username"
+              class="input-field"
+              required
+            />
+          </div>
+  
+          <div class="input-group">
+            <input
+              type="tel"
+              id="phone"
+              v-model="phone"
+              placeholder="Phone"
+              class="input-field"
+              required
+            />
+          </div>
+  
+          <div class="input-group">
+            <input
+              type="email"
+              id="email"
+              v-model="email"
+              placeholder="Email"
+              class="input-field"
+              required
+            />
+          </div>
+  
+          <div class="input-group">
+            <input
+              type="password"
+              id="password"
+              v-model="password"
+              placeholder="Password"
+              class="input-field"
+              required
+            />
+          </div>
+  
+          <div class="input-group">
+            <input
+              type="password"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              placeholder="Confirm Password"
+              class="input-field"
+              required
+            />
+          </div>
+  
+          <button type="submit" class="signup-button">SIGN UP</button>
+        </form>
+      </div>
     </div>
-</template>
-
-
-<script>
-import Swal from 'sweetalert2'
-import firebase from '~/plugins/firebase.js'
-export default {
+  </template>
+  
+  <script>
+  import firebase from '~/plugins/firebase.js'
+  import Swal from 'sweetalert2'
+  export default {
     data() {
-        return {
-            username: '',
-            fullname: '',
-            email: '',
-            phone: '',
-            password: '',
-            confirmPassword: ''
-        };
+      return {
+        username: '',
+        phone: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      };
     },
     methods: {
-        handleSubmit() {
-            if (this.password !== this.confirmPassword) {
-                alert("รหัสผ่านไม่ตรงกัน");
-                return;
-            }
-            firebase.auth().createUserWithEmailAndPassword(this.email, this.password)
-                .then((user) => { this.set_data_to_user(user.user.uid); })
-                .catch((error) => {
-                    Swal.fire(
-                        {
-                            position: "center",
-                            icon: "error",
-                            title: "มีบัญชีอยู่แล้ว",
-                            showConfirmButton: false,
-                            timer: 1500
-
-                        });
-                });
-        },
-        set_data_to_user(uid) {
-            firebase.database().ref('users/' + uid).set({
-                username: this.username,
-                fullname: this.fullname,
-                email: this.email,
-                phone: this.phone,
-                uid: uid
-            }).then(() => {
-                Swal.fire({
-                    position: "center",
-                    icon: "success",
-                    title: "สมัครสมาชิกสําเร็จ",
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    this.$router.push('/dashboard');
-                })
+      handleSubmit() {
+        if (this.password !== this.confirmPassword) {
+          alert("Passwords do not match");
+          return;
+        }
+        firebase
+          .auth()
+          .createUserWithEmailAndPassword(this.email, this.password)
+          .then((user) => {
+            this.setUserData(user.user.uid);
+          })
+          .catch((error) => {
+            Swal.fire({
+              position: "center",
+              icon: "error",
+              title: "Account already exists",
+              showConfirmButton: false,
+              timer: 1500
             });
-        },
+          });
+      },
+      setUserData(uid) {
+        firebase
+          .database()
+          .ref('users/' + uid)
+          .set({
+            username: this.username,
+            phone: this.phone,
+            email: this.email,
+            uid: uid
+          })
+          .then(() => {
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Registration successful",
+              showConfirmButton: false,
+              timer: 1500
+            }).then(() => {
+              this.$router.push('/dashboard');
+            });
+          });
+      }
     }
-};
-</script>
-
-<style scoped>
-.forgot-password {
-    text-align: end;
-}
-
-.signup-page {
+  };
+  </script>
+  
+  <style scoped>
+  .signup-page {
     display: flex;
-    justify-content: center;
-    align-items: center;
     height: 100vh;
+  }
+  
+  .image-section {
+    flex: 1;
     background-image: url('../static/login/bg.png');
-}
-
-.signup-container {
-    background-color: rgba(255, 255, 255, 0);
-    padding: 2rem;
-    border-radius: 20px;
-    width: 500px;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .signup-container {
+    flex: 0.7;
+    padding: 5rem;
     text-align: center;
-    position: relative;
-    right: 250px;
-}
-
-h2 {
-    font-size: 1.5rem;
-    color: #2E3C88;
-    margin-bottom: 2rem;
-}
-
-.input-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    background-color: white;
+  }
+  
+  .auth-header {
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 1.5rem;
-}
+  }
+  
+  .auth-link {
+    text-decoration: none;
+    font-size: 1rem;
+    position: relative;
+    right: -50px;
+    color: #000;
+    position: relative;
+  }
 
-.input-field {
+  .auth-link1 {
+    text-decoration: none;
+    font-size: 1rem;
+    position: relative;
+    right: 50px;
+    color: #000;
+    position: relative;
+  }
+  
+  .auth-link1.active::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: #1e88e5;
+    bottom: -5px;
+    left: 0;
+  }
+  
+  .auth-link:hover {
+    color: #1e88e5;
+  }
+  
+  .welcome-text {
+    padding-top: 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    color: #000;
+  }
+  
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .input-field {
     width: 100%;
     height: 2.5rem;
     padding: 1rem;
-    border-radius: 25px;
-    border: none;
-    background-color: #e3f2fd;
+    /* border-radius: 5px; */
+    border: 1px solid #A6A6A6;
     font-size: 1rem;
-    color: #1a237e;
-}
-
-.input-field::placeholder {
-    color: #90a4ae;
-}
-
-button {
+    color: #000;
+  }
+  
+  .input-field::placeholder {
+    color: #bdbdbd;
+  }
+  
+  .signup-button {
     width: 100%;
     height: 2.5rem;
-    border-radius: 25px;
+    /* border-radius: 5px; */
     border: none;
+    background-color: #146799;
+    color: white;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
-}
-
-button:hover {
-    background-color: #7ec5f8;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: scale(1.05);
-}
-
-.signup-button {
-    background-color: #1e88e5;
-    color: white;
-}
-
-/* สำหรับหน้าจอขนาดเล็ก (เช่น มือถือ) */
-@media (max-width: 768px) {
+  }
+  
+  .signup-button:hover {
+    background-color: #327ab9;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
     .signup-page {
-        padding: 1rem;
+      flex-direction: column;
     }
-
+  
+    .image-section {
+      display: none;
+    }
+  
     .signup-container {
-        width: 100%;
-        padding: 1.5rem;
-        border-radius: 10px;
-        position: relative;
-        right: 0px;
+      width: 100%;
+      padding: 1.5rem;
     }
-
+  
+    .auth-link {
+      font-size: 0.9rem;
+    }
+  
+    .welcome-text {
+      font-size: 1.2rem;
+    }
+  
     .input-field {
-        height: 2rem;
-        padding: 0.75rem;
-        font-size: 0.9rem;
+      height: 2rem;
+      padding: 0.75rem;
+      font-size: 0.9rem;
     }
-
+  
     button {
-        height: 2rem;
-        font-size: 0.9rem;
+      height: 2rem;
+      font-size: 0.9rem;
     }
-
-    h2 {
-        font-size: 1.2rem;
-    }
-}
-</style>
+  }
+  </style>
+  

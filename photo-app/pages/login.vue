@@ -1,36 +1,25 @@
 <template>
   <div class="login-page">
+    <div class="image-section"></div>
     <div class="login-container">
-      <h2 class="pb-4">เข้าสู่ระบบ</h2>
+      <div class="auth-header">
+        <nuxt-link to="/login" class="auth-link active">SIGN IN</nuxt-link>
+        <nuxt-link to="/signup" class="auth-link1">REGISTER</nuxt-link>
+      </div>
+
+      <h2 class="welcome-text">Welcome Block</h2>
+
       <form @submit.prevent="handleSubmit">
         <div class="input-group">
-          <input
-            type="text"
-            id="username"
-            v-model="username"
-            placeholder="ชื่อผู้ใช้"
-            class="input-field"
-            required
-          />
+          <input type="text" id="username" v-model="username" placeholder="email" class="input-field"
+            required />
         </div>
 
         <div class="input-group">
-          <input
-            type="password"
-            id="password"
-            v-model="password"
-            placeholder="รหัสผ่าน"
-            class="input-field"
-            required
-          />
+          <input type="password" id="password" v-model="password" placeholder="Password" class="input-field" required />
         </div>
 
-        <button type="submit" class="login-button mt-4 mb-4">เข้าสู่ระบบ</button>
-
-        <hr>
-
-        <p class="forgot-password">ยังไม่ได้เป็นสมาชิก <nuxt-link to="/signup" class="text-p">สมัครสมาชิก</nuxt-link></p>
-
+        <button type="submit" class="login-button">SIGN IN</button>
       </form>
     </div>
   </div>
@@ -55,7 +44,7 @@ export default {
           Swal.fire({
             position: 'center',
             icon: 'success',
-            title: 'เข้าสู่ระบบสําเร็จ',
+            title: 'Login successful',
             showConfirmButton: false,
             timer: 1500
           }).then(() => {
@@ -66,57 +55,84 @@ export default {
           Swal.fire({
             position: 'center',
             icon: 'error',
-            title: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+            title: 'Invalid username or password',
             showConfirmButton: false,
             timer: 1500
           })
         });
-
     }
   }
 };
 </script>
 
 <style scoped>
-
-.forgot-password {
-  text-align: end;
-}
-
-.text-p {
-  color: #1e88e5;
-  text-decoration: none;
-}
-
-.text-p:hover {
-  color: #327ab9;
-  text-decoration: none;
-  transition: all 0.3s ease-in-out;
-}
-
 .login-page {
   display: flex;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
+}
+
+.image-section {
+  flex: 1;
   background-image: url('../static/login/bg.png');
+  background-size: cover;
+  background-position: center;
 }
 
 .login-container {
-  background-color: rgba(255, 255, 255, 0);
-  padding: 2rem;
-  border-radius: 20px;
-  /* box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); */
-  position: relative;
-  right: 250px;
-  width: 500px;
+  flex: 0.7;
+  padding: 5rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  background-color: white;
 }
 
-h2 {
+.auth-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.auth-link {
+  text-decoration: none;
+  font-size: 1rem;
+  position: relative;
+  right: -50px;
+  color: #000;
+  position: relative;
+}
+
+.auth-link1 {
+  text-decoration: none;
+  font-size: 1rem;
+  position: relative;
+  right: 50px;
+  color: #000;
+  position: relative;
+}
+
+.auth-link.active::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background-color: #1e88e5;
+  bottom: -5px;
+  left: 0;
+}
+
+.auth-link:hover {
+  color: #1e88e5;
+}
+
+.welcome-text {
+  padding-top: 2rem;
   font-size: 1.5rem;
-  color: #2E3C88;
+  font-weight: bold;
   margin-bottom: 2rem;
+  color: #000;
 }
 
 .input-group {
@@ -127,58 +143,53 @@ h2 {
   width: 100%;
   height: 2.5rem;
   padding: 1rem;
-  border-radius: 25px;
-  border: none;
-  background-color: #e3f2fd;
-  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+  /* border-radius: 5px; */
+  border: 1px solid #A6A6A6;
   font-size: 1rem;
-  color: #1a237e;
+  color: #000;
 }
 
 .input-field::placeholder {
-  color: #90a4ae;
+  color: #bdbdbd;
 }
 
-button {
+.login-button {
   width: 100%;
   height: 2.5rem;
-  /* padding: 1rem; */
-  border-radius: 25px;
+  /* border-radius: 5px; */
   border: none;
+  background-color: #146799;
+  color: white;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
 }
 
-button:hover {
-  background-color: #7ec5f8;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: matrix(1.05, 0, 0, 1.05, 0, 0);
-  transition: all 0.3s ease-in-out;
+.login-button:hover {
+  background-color: #327ab9;
 }
 
-.login-button {
-  background-color: #1e88e5;
-  color: white;
-  margin-bottom: 1rem;
-}
-
-.signup-button {
-  background-color: #29b6f6;
-  color: white;
-}
-
-/* สำหรับหน้าจอขนาดเล็ก (เช่น มือถือ) */
+/* Responsive Design */
 @media (max-width: 768px) {
   .login-page {
-    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .image-section {
+    display: none;
   }
 
   .login-container {
     width: 100%;
     padding: 1.5rem;
-    right: 0;
-    border-radius: 10px;
+  }
+
+  .auth-link {
+    font-size: 0.9rem;
+  }
+
+  .welcome-text {
+    font-size: 1.2rem;
   }
 
   .input-field {
@@ -192,12 +203,8 @@ button:hover {
     font-size: 0.9rem;
   }
 
-  h2 {
-    font-size: 1.2rem;
-  }
-  p{
+  p {
     font-size: 0.8rem;
   }
 }
-
 </style>

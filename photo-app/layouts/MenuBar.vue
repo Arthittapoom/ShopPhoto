@@ -1,5 +1,9 @@
 <template>
+  <div>
+  <!-- Navbar Component -->
+  <Navbar />
   <div class="dashboard-page">
+    
     <aside class="sidebar">
       <div class="admin-info">
         <div class="avatar"></div>
@@ -31,10 +35,12 @@
         <h1>{{ pages }}</h1> <!-- แสดง username -->
       </div>
       <div class="content">
+        
         <Nuxt /> <!-- แสดงเนื้อหาของเพจ -->
         <pre>{{ data }}</pre>
       </div>
     </main>
+  </div>
   </div>
 </template>
 
