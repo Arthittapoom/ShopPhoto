@@ -8,7 +8,7 @@
         <div class="container">
           <div class="search-bar">
             <input type="text" placeholder="ค้นหาภาพถ่ายที่คุณต้องการ" v-model="searchQuery" />
-            <button @click="handleSearch">🔍</button>
+            <button @click="handleSearch"><img src="../static/home/search.png" alt=""></button>
           </div>
         </div>
       </header>
@@ -112,27 +112,31 @@
     background-image: url('../static/home/header.png');
     background-size: cover;
     background-position: center;
-    height: 300px;
+    height: 400px;
   }
   
   .search-bar {
     display: flex;
     justify-content: center;
-    margin-top: 5rem;
+    align-items: center;
+    padding: 5rem 0;
+    margin-top: 1rem;
   }
   
   .search-bar input {
-    padding: 0.75rem;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border: 1px solid #ffffff;
+    border-radius: 3px;
+    width: 600px;
   }
   
   .search-bar button {
-    padding: 0.75rem;
-    background-color: #007bff;
-    border: none;
+    background-color: #146799;
     color: white;
+    border: none;
+    padding: 0.5rem 1rem;
     margin-left: 1rem;
+    border-radius: 5px;
     cursor: pointer;
   }
   
@@ -142,8 +146,9 @@
   }
   
   .tags button {
+    border-radius: 15px;
     background-color: white;
-    border: 1px solid #ddd;
+    border: 1px solid #146799;
     padding: 0.5rem 1rem;
     margin: 0.5rem;
     cursor: pointer;

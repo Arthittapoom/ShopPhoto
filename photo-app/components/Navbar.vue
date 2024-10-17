@@ -1,6 +1,6 @@
 <template>
     <nav class="navbar">
-        
+
       <div class="navbar-container">
         <!-- Logo aligned to the left -->
         <div class="logo">
@@ -9,10 +9,11 @@
         <!-- Navigation links aligned to the right -->
         <div class="nav-links">
           <nuxt-link to="/home">Home</nuxt-link>
-          <nuxt-link to="/cart">Cart</nuxt-link>
           <nuxt-link to="/board">Board</nuxt-link>
-          <nuxt-link to="/signin">Sign In</nuxt-link>
+          <nuxt-link to="/cart">Cart</nuxt-link>
           <nuxt-link to="/dashboard">Dashboard</nuxt-link>
+          <nuxt-link to="/login">Sign In</nuxt-link>
+          <nuxt-link to="/signup">Sign Up</nuxt-link>
         </div>
       </div>
     </nav>

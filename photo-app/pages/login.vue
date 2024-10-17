@@ -1,26 +1,31 @@
 <template>
-  <div class="login-page">
-    <div class="image-section"></div>
-    <div class="login-container">
-      <div class="auth-header">
-        <nuxt-link to="/login" class="auth-link active">SIGN IN</nuxt-link>
-        <nuxt-link to="/signup" class="auth-link1">REGISTER</nuxt-link>
+  <div>
+
+    <!-- Navbar Component -->
+    <Navbar />
+    <div class="login-page">
+      <div class="image-section"></div>
+      <div class="login-container">
+        <div class="auth-header">
+          <nuxt-link to="/login" class="auth-link active">SIGN IN</nuxt-link>
+          <nuxt-link to="/signup" class="auth-link1">REGISTER</nuxt-link>
+        </div>
+  
+        <h2 class="welcome-text">Welcome Block</h2>
+  
+        <form @submit.prevent="handleSubmit">
+          <div class="input-group">
+            <input type="text" id="username" v-model="username" placeholder="email" class="input-field"
+              required />
+          </div>
+  
+          <div class="input-group">
+            <input type="password" id="password" v-model="password" placeholder="Password" class="input-field" required />
+          </div>
+  
+          <button type="submit" class="login-button">SIGN IN</button>
+        </form>
       </div>
-
-      <h2 class="welcome-text">Welcome Block</h2>
-
-      <form @submit.prevent="handleSubmit">
-        <div class="input-group">
-          <input type="text" id="username" v-model="username" placeholder="email" class="input-field"
-            required />
-        </div>
-
-        <div class="input-group">
-          <input type="password" id="password" v-model="password" placeholder="Password" class="input-field" required />
-        </div>
-
-        <button type="submit" class="login-button">SIGN IN</button>
-      </form>
     </div>
   </div>
 </template>

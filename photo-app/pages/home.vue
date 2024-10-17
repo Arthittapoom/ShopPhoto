@@ -7,7 +7,7 @@
         <div class="container">
           <div class="search-bar">
             <input type="text" placeholder="ค้นหาภาพถ่ายที่คุณต้องการ" v-model="searchQuery" />
-            <button @click="handleSearch">🔍</button>
+            <button @click="handleSearch"><img src="../static/home/search.png" alt=""></button>
           </div>
         </div>
       </header>
@@ -16,8 +16,8 @@
       <section class="intro">
         <h2>สร้างความเชื่อมโยงที่ลึกซึ้งด้วยภาพถ่ายสต็อกที่สมจริง</h2>
         <p>
-          เข้าถึงและเชื่อมต่อจิตวิญญาณของคุณด้วยหลากหลายหมวดหมู่ของภาพถ่ายสต็อกที่หลากหลาย
-          ที่นำเสนอภาพลิขสิทธิ์คุณภาพสูงที่สมจริง
+            เข้าถึงและดึงดูดผู้ชมของคุณด้วยคอลเลกชันภาพถ่ายสต็อกหลากหลายจาก <br> 
+            ที่มีให้เลือกหลายล้านภาพแบบไร้ค่าลิขสิทธิ์ ทั้งในหลากหลายรูปแบบและสไตล์ รวมถึงภาพพิเศษที่หาที่ไหนไม่ได้
         </p>
         <button @click="viewPlans">View Plans and Pricing</button>
       </section>
@@ -33,7 +33,7 @@
       </section>
   
       <!-- Dynamic Popular Image Categories -->
-      <section class="popular-categories">
+      <section class="popular-categories container">
         <h3>หมวดหมู่ภาพถ่ายสต็อกที่กำลังเป็นที่นิยม</h3>
         <div class="category-grid">
           <div
@@ -66,7 +66,7 @@
       <!-- Dynamic Image Gallery -->
       <section class="gallery-section">
         <h3>รูปภาพในคลัง</h3>
-        <div class="gallery-grid">
+        <div class="gallery-grid container">
           <div v-for="image in galleryImages" :key="image.id" class="gallery-item">
             <img :src="image.url" :alt="image.alt" />
           </div>
@@ -153,8 +153,9 @@
   
   .search-bar input {
     padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid #ffffff;
+    border-radius: 3px;
+    width: 600px;
   }
   
   .search-bar button {
@@ -175,7 +176,10 @@
   .intro button {
     background-color: #146799;
     color: white;
-    padding: 1rem 2rem;
+    width: 150px;
+    font-size: 10px;
+    margin-top: 15px;
+    padding: 10px 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -229,7 +233,9 @@
   
   /* Gallery Section */
   .gallery-section {
+    text-align: center;
     margin: 3rem 0;
+    
   }
   
   .gallery-grid {

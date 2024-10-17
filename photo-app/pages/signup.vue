@@ -1,4 +1,8 @@
 <template>
+  <div>
+    <!-- Navbar Component -->
+    <Navbar />
+
     <div class="signup-page">
       <div class="image-section"></div>
       <div class="signup-container">
@@ -69,6 +73,7 @@
         </form>
       </div>
     </div>
+  </div>
   </template>
   
   <script>
