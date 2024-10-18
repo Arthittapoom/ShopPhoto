@@ -1,5 +1,5 @@
 <template>
-    <div class="upload-photo-container">
+    <div class="upload-photo-container scrollable-content">
         
         <div class="form-grid">
             <!-- Image Preview -->
@@ -43,7 +43,8 @@
                         <label>Media Category <button @click="addCategory">+</button></label>
                         <div v-for="(category, index) in mediaCategories" :key="index" class="category-item">
                             <input type="text" v-model="mediaCategories[index]" />
-                            
+                            <button @click="removeCategory(index)">Remove</button>
+
                         </div>
 
                     </div>
@@ -53,8 +54,10 @@
                     </div>
                 </div>
 
-                <button class="add-photo-button" @click="addPhoto">Add Photo</button>
             </div>
+        </div>
+        <div style="text-align: end;">
+            <button class="add-photo-button" @click="addPhoto">Add Photo</button>
         </div>
     </div>
 </template>
@@ -99,6 +102,9 @@ export default {
                 mediaCategories: this.mediaCategories,
                 imagePreview : this.imagePreview
             });
+        },
+        removeCategory(index) {
+            this.mediaCategories.splice(index, 1);
         },
     },
 };
@@ -156,13 +162,16 @@ img {
 }
 
 button {
-    padding: 8px 16px;
-    background-color: #007bff;
+    padding: 1px 16px;
+    background-color: #166798;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     margin-top: 10px;
+    width: auto;
+    height: 2rem;
+    margin-left: 1.5rem;
 }
 
 button:hover {
@@ -171,5 +180,28 @@ button:hover {
 
 .add-photo-button {
     grid-column: 1 / 3;
+}
+
+/* Scrollable content */
+.scrollable-content {
+    width: 100%;
+    height: 80vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 10px;
+}
+
+/* Custom scrollbar */
+.scrollable-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background-color: #ffffff;
+    border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+    background-color: #ffffff;
 }
 </style>

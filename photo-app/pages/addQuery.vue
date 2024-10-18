@@ -11,7 +11,8 @@
         <div class="form-field">
           <input type="text" v-model="message" placeholder="message" />
         </div>
-  
+      </div>
+      <div style="width: 100%; display: flex; justify-content: end; padding-top: 50px;">
         <!-- Add Query button -->
         <button class="add-query-button" @click="addQuery">Add Query</button>
       </div>
@@ -48,6 +49,7 @@
   
   <style scoped>
   .add-query-container {
+    padding-top: 60px;
     max-width: 600px;
     margin: 0 auto;
     text-align: start;
@@ -79,7 +81,7 @@
   
   button {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #166798;
     color: white;
     border: none;
     border-radius: 4px;

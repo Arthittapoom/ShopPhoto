@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Navbar Component -->
-    <Navbar />
+    <!-- <Navbar /> -->
 
     <div class="signup-page">
       <div class="image-section"></div>
@@ -129,7 +129,7 @@
               showConfirmButton: false,
               timer: 1500
             }).then(() => {
-              this.$router.push('/dashboard');
+              this.$router.push('/home');
             });
           });
       }

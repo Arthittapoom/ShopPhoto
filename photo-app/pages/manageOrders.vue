@@ -144,7 +144,7 @@ export default {
 
 .order-action button {
     padding: 8px 16px;
-    background-color: #007bff;
+    background-color: #166798;
     color: white;
     border: none;
     border-radius: 4px;

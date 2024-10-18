@@ -7,46 +7,54 @@
     <div class="cart-page">
       <div class="cart-container">
         <h2 class="cart-title">Shopping Cart</h2>
-
-        <!-- Status Filter -->
-        <div class="filter-container">
-          <label for="statusFilter" class="filter-label">Filter by Status:</label>
-          <select v-model="statusFilter" id="statusFilter" class="filter-select">
-            <option value="">All</option>
-            <option value="Not paid">Not paid</option>
-            <option value="Waiting confirmation">Waiting confirmation</option>
-            <option value="Confirmation">Confirmation</option>
-          </select>
-        </div>
-
-        <div class="cart-header">
-          <p>Items selected for purchase: {{ selectedItems.length }}</p>
-        </div>
-
-        <!-- Cart Items List -->
-        <div v-for="(item, index) in filteredItems" :key="index" class="cart-item">
-          <img :src="item.image" alt="item image" class="item-image" />
-          <div class="item-details">
-            <p><strong>Media type:</strong> {{ item.mediaType }}</p>
-            <p><strong>License type:</strong> <a href="#">{{ item.licenseType }}</a></p>
-            <p><strong>Price:</strong> {{ item.price }} THB</p>
-
-            <!-- row -->
-
-            <div class="row">
-              <div class="col-7">
-                <p :class="statusClass(item.status)" class="item-status">
-                  Status: {{ item.status }}
-                </p>
-              </div>
-              <div class="col">
-                <button v-if="item.status === 'Confirmation'" class="download-button"
-                  @click="downloadItem(item)">Dorwnload</button>
-              </div>
+        <div class="row">
+          <div class="col">
+            <div class="cart-header">
+              <p>Items selected for purchase: {{ selectedItems.length }}</p>
             </div>
-
           </div>
-          <input type="checkbox" v-model="item.selected" class="select-item-checkbox" />
+          <div class="col">
+            <!-- Status Filter -->
+            <div class="filter-container">
+              <label for="statusFilter" class="filter-label">Filter by Status:</label>
+              <select v-model="statusFilter" id="statusFilter" class="filter-select">
+                <option value="">All</option>
+                <option value="Not paid">Not paid</option>
+                <option value="Waiting confirmation">Waiting confirmation</option>
+                <option value="Confirmation">Confirmation</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="scrollable-content">
+          <!-- Cart Items List -->
+          <div v-for="(item, index) in filteredItems" :key="index" class="cart-item ">
+            <img :src="item.image" alt="item image" class="item-image" />
+            <div class="item-details">
+              <p><strong>Media type:</strong> {{ item.mediaType }}</p>
+              <p><strong>License type:</strong> <a href="#">{{ item.licenseType }}</a></p>
+              <p><strong>Price:</strong> {{ item.price }} THB</p>
+
+              <!-- row -->
+
+              <div class="row">
+                <div class="col-7">
+                  <p :class="statusClass(item.status)" class="item-status">
+                    Status: {{ item.status }}
+                  </p>
+                </div>
+                <div class="col">
+                  <button v-if="item.status === 'Confirmation'" class="download-button"
+                    @click="downloadItem(item)">Dorwnload</button>
+                </div>
+              </div>
+
+              <button class="remove-button" @click="removeItem(item)">Remove</button>
+            </div>
+            <input type="checkbox" v-model="item.selected" class="select-item-checkbox" />
+          </div>
         </div>
       </div>
 
@@ -71,9 +79,17 @@
         <input type="file" @change="handleFileUpload" class="file-input" />
         <img v-if="slipImageUrl" :src="slipImageUrl" alt="slip preview" class="slip-preview" />
         <div class="transfer-details">
-          <input type="text" placeholder="Name" v-model="transfer.name" class="input-field" />
-          <input type="text" placeholder="Date" v-model="transfer.date" class="input-field" />
-          <input type="text" placeholder="Bank" v-model="transfer.bank" class="input-field" />
+          <div class="row">
+            <div class="col">
+              <input type="text" placeholder="Name" v-model="transfer.name" class="input-field" />
+            </div>
+            <div class="col">
+              <input type="text" placeholder="Bank" v-model="transfer.bank" class="input-field" />
+            </div>
+            <div class="col">
+              <input type="text" placeholder="Date" v-model="transfer.date" class="input-field" />
+            </div>
+          </div>
         </div>
         <div class="subtotal-container">
           <p class="subtotal-text">Subtotal: {{ selectedSubtotal }} THB</p>
@@ -106,6 +122,22 @@ export default {
           licenseType: 'Rights-managed',
           price: 100,
           status: 'Waiting confirmation',
+          selected: false,
+          image: 'https://dummyimage.com/150x100/000/fff',
+        },
+        {
+          mediaType: 'Editorial image | 21234422',
+          licenseType: 'Rights-managed',
+          price: 100,
+          status: 'Confirmation',
+          selected: false,
+          image: 'https://dummyimage.com/150x100/000/fff',
+        },
+        {
+          mediaType: 'Editorial image | 21234422',
+          licenseType: 'Rights-managed',
+          price: 100,
+          status: 'Confirmation',
           selected: false,
           image: 'https://dummyimage.com/150x100/000/fff',
         },
@@ -164,7 +196,11 @@ export default {
     },
     downloadItem(item) {
       console.log(item)
-    }
+    },
+    removeItem(item) {
+      this.cartItems = this.cartItems.filter((i) => i !== item);
+    },
+
   },
 };
 </script>
@@ -223,6 +259,29 @@ export default {
   margin-bottom: 1.5rem;
 }
 
+/* Scrollable content */
+.scrollable-content {
+  width: 100%;
+  height: 66.5vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 10px;
+}
+
+/* Custom scrollbar */
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background-color: #ffffff;
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background-color: #ffffff;
+}
+
 .item-image {
   width: 150px;
   height: 100px;
@@ -255,6 +314,17 @@ export default {
   border-radius: 5px;
 }
 
+.remove-button {
+  margin-left: 1rem;
+  cursor: pointer;
+  height: 30px;
+  width: auto;
+  background-color: #3f3f3f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
 .download-button:hover {
   background-color: #647b70;
 }
@@ -282,13 +352,13 @@ export default {
 .payment-container {
   flex: 1;
   background-color: #ABC4D4;
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 10px;
 }
 
 .payment-title {
   font-size: 1.5rem;
-  margin-bottom: 1rem;
+  /* margin-bottom: 1rem; */
   color: #166798;
 }
 
@@ -329,7 +399,7 @@ export default {
 }
 
 .pay-button {
-  margin-top: 1rem;
+  /* margin-top: 1rem; */
   padding: 0.75rem 1.5rem;
   background-color: #166798;
   color: white;

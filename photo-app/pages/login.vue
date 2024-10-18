@@ -2,7 +2,7 @@
   <div>
 
     <!-- Navbar Component -->
-    <Navbar />
+    <!-- <Navbar /> -->
     <div class="login-page">
       <div class="image-section"></div>
       <div class="login-container">
@@ -53,7 +53,7 @@ export default {
             showConfirmButton: false,
             timer: 1500
           }).then(() => {
-            this.$router.push('/dashboard');
+            this.$router.push('/home');
           })
         })
         .catch((error) => {
