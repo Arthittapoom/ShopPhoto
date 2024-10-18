@@ -1,108 +1,179 @@
 <template>
-    <div>
-        <!-- Navbar Component -->
-      <Navbar />
+  <div>
+    <!-- Navbar Component -->
+    <Navbar />
 
-      <!-- Header with Search Bar -->
-      <header class="header">
-        <div class="container">
-          <div class="search-bar">
-            <input type="text" placeholder="ค้นหาภาพถ่ายที่คุณต้องการ" v-model="searchQuery" />
-            <button @click="handleSearch"><img src="../static/home/search.png" alt=""></button>
-          </div>
+    <!-- Header with Search Bar -->
+    <header class="header">
+      <div class="container">
+        <div class="search-bar">
+          <input
+            type="text"
+            placeholder="ค้นหาภาพถ่ายที่คุณต้องการ"
+            v-model="searchQuery"
+          />
+          <button @click="handleSearch"><img src="../static/home/search.png" alt="" /></button>
         </div>
-      </header>
-  
-      <!-- Popular Tags -->
-      <section class="tags-section">
-        <div class="tags">
-          <button v-for="tag in popularTags" :key="tag" @click="filterByTag(tag)">
-            {{ tag }}
-          </button>
+      </div>
+    </header>
+
+    <!-- Popular Tags (Categories) -->
+    <section class="tags-section">
+      <div class="tags">
+        <button v-for="tag in availableCategories" :key="tag" @click="filterByTag(tag)">
+          {{ tag }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Dynamic Image Grid -->
+    <section class="image-grid-section">
+      <div class="image-grid">
+        <div
+          v-for="image in filteredImages"
+          :key="image.id"
+          class="image-item"
+          @click="showImageDetails(image)"
+        >
+          <img :src="image.imagePreview" :alt="image.mediaName" />
         </div>
-      </section>
-  
-      <!-- Dynamic Image Grid -->
-      <section class="image-grid-section">
-        <div class="image-grid">
-          <div v-for="image in displayedImages" :key="image.id" class="image-item">
-            <img :src="image.url" :alt="image.alt" />
-          </div>
-        </div>
-      </section>
-  
-      <!-- Pagination -->
-      <section class="pagination-section">
-        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-        <span>{{ currentPage }}</span>
-        <button @click="nextPage" :disabled="!hasMorePages">Next</button>
-      </section>
+      </div>
+    </section>
+
+    <!-- Image Details Modal -->
+    <div v-if="selectedImage" class="modal">
+      <div class="modal-content">
+        <img :src="selectedImage.imagePreview" alt="Selected Image" />
+        <p><strong>Media Name:</strong> {{ selectedImage.mediaName }}</p>
+        <p><strong>Categories:</strong> {{ selectedImage.mediaCategories }}</p>
+        <p><strong>License:</strong> {{ selectedImage.mediaLicense }}</p>
+        <p><strong>Price:</strong> {{ selectedImage.mediaPrice }}</p>
+        <button @click="closeModal">กลับ</button>
+        <button @click="confirmSelection">ตกลง</button>
+      </div>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        searchQuery: '',
-        popularTags: ['ความเป็นอยู่', 'อาหารไทย', 'วัฒนธรรมไทย', 'สปา', 'สถานที่ท่องเที่ยว'],
-        images: [
-          { id: 1, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 1' },
-          { id: 2, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 2' },
-          { id: 3, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 3' },
-          { id: 4, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 4' },
-          { id: 5, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 5' },
-          { id: 6, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 6' },
-          { id: 7, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 7' },
-          { id: 8, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 8' },
-          { id: 9, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 9' },
-          { id: 10, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 10' },
-          { id: 11, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 11' },
-          { id: 12, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 12' },
-          { id: 13, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 13' },
-          { id: 14, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 14' },
-          { id: 15, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 15' },
-          { id: 16, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 16' },
-          { id: 17, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 17' },
-          { id: 18, url: 'https://dummyimage.com/300x300/000/fff', alt: 'Image 18' },
-        ],
-        currentPage: 1,
-        imagesPerPage: 15,
-      };
+
+    <!-- Pagination -->
+    <section class="pagination-section">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>{{ currentPage }}</span>
+      <button class="" @click="nextPage" :disabled="!hasMorePages">Next</button>
+    </section>
+  </div>
+</template>
+
+<script>
+import Swal from 'sweetalert2';
+import firebase from '~/plugins/firebase.js';
+
+export default {
+  data() {
+    return {
+      searchQuery: '',
+      availableCategories: [],
+      images: [],
+      filteredImages: [],
+      selectedImage: null,
+      currentPage: 1,
+      imagesPerPage: 15,
+    };
+  },
+
+  computed: {
+    displayedImages() {
+      const start = (this.currentPage - 1) * this.imagesPerPage;
+      return this.filteredImages.slice(start, start + this.imagesPerPage);
     },
-    computed: {
-      displayedImages() {
-        const start = (this.currentPage - 1) * this.imagesPerPage;
-        return this.images.slice(start, start + this.imagesPerPage);
-      },
-      hasMorePages() {
-        return this.currentPage * this.imagesPerPage < this.images.length;
-      },
+    hasMorePages() {
+      return this.currentPage * this.imagesPerPage < this.filteredImages.length;
     },
-    methods: {
-      handleSearch() {
-        alert(`Searching for: ${this.searchQuery}`);
-      },
-      filterByTag(tag) {
-        alert(`Filtering by tag: ${tag}`);
-      },
-      nextPage() {
-        if (this.hasMorePages) {
-          this.currentPage++;
+  },
+
+  mounted() {
+    this.getCategories();
+    this.getPhotos();
+
+    
+  },
+
+  methods: {
+    // ดึงข้อมูลหมวดหมู่จาก Firebase
+    getCategories() {
+      const dbRef = firebase.database().ref('categories');
+      dbRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          this.availableCategories = Object.values(data);
+          console.log( this.availableCategories );
         }
-      },
-      prevPage() {
-        if (this.currentPage > 1) {
-          this.currentPage--;
-        }
-      },
+      });
     },
-  };
-  </script>
-  
-  <style scoped>
-  /* Layout Styles */
-  .container {
+
+    // ดึงข้อมูลรูปภาพจาก Firebase
+    getPhotos() {
+      const dbRef = firebase.database().ref('photos');
+      dbRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          this.images = Object.values(data);
+          this.filteredImages = this.images;
+
+          console.log( this.images );
+        }
+      });
+    },
+
+    // ฟังก์ชันค้นหารูปภาพจากชื่อหรือหมวดหมู่
+    handleSearch() {
+      this.filteredImages = this.images.filter((image) => {
+        return (
+          image.mediaName.includes(this.searchQuery) ||
+          image.mediaCategories.includes(this.searchQuery)
+        );
+      });
+    },
+
+    // ฟังก์ชันกรองรูปภาพตามหมวดหมู่
+    filterByTag(tag) {
+      this.filteredImages = this.images.filter((image) =>
+        image.mediaCategories.includes(tag)
+      );
+    },
+
+    // ฟังก์ชันแสดงรายละเอียดของรูปภาพ
+    showImageDetails(image) {
+      this.selectedImage = image;
+    },
+
+    // ฟังก์ชันปิดโมดัล
+    closeModal() {
+      this.selectedImage = null;
+    },
+
+    // ฟังก์ชันยืนยันการเลือกภาพ
+    confirmSelection() {
+      Swal.fire('Selected Image', 'You have selected this image.', 'success');
+      this.selectedImage = null;
+    },
+
+    // การเปลี่ยนหน้า pagination
+    nextPage() {
+      if (this.hasMorePages) {
+        this.currentPage++;
+      }
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+ /* Layout Styles */
+ .container {
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -215,5 +286,23 @@
       grid-template-columns: repeat(3, 1fr);
     }
   }
-  </style>
-  
+
+.modal {
+  position: fixed;
+  top: 60px;
+  left: 35%;
+  width: auto;
+  height: auto;
+  /* background: rgba(255, 255, 255, 0.5); */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+</style>

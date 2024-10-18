@@ -236,7 +236,7 @@ export default {
 /* Main Content */
 .main-content {
   flex: 1;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 }
 
 .header {

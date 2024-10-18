@@ -88,6 +88,8 @@
   </template>
   
   <script>
+  import Swal from 'sweetalert2';
+import firebase from '~/plugins/firebase.js';
   export default {
     data() {
       return {
