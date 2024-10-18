@@ -1,26 +1,29 @@
 <template>
   <div>
   <!-- Navbar Component -->
-  <Navbar />
+  <!-- <Navbar /> -->
   <div class="dashboard-page">
     
     <aside class="sidebar">
-      <div class="admin-info">
-        <div class="avatar"></div>
-        <!-- <p>Admin</p>
-        <p>โปรไฟล์</p> -->
-      </div>
+
+      <H2 style=" text-align: center; color: floralwhite;">Gallery Gain</H2>
+
       <nav class="menu">
         <h3>MENU</h3>
         <ul>
-          <li :class="{ activemenu: pages === 'dashboard' }"><nuxt-link to="/dashboard">Dashboard</nuxt-link></li>
-          <li :class="{ activemenu: pages === 'orders' }"><nuxt-link to="/orders">ออเดอร์ส่งผลิต</nuxt-link></li>
-          <li :class="{ activemenu: pages === 'addProductionOrder' }"><nuxt-link
-              to="/addProductionOrder">เพิ่มแพตเทิร์น</nuxt-link></li>
-          <li :class="{ activemenu: pages === 'orderHistory' }"><nuxt-link to="/orderHistory">ประวัติออเดอร์</nuxt-link>
-          </li>
-          <li :class="{ activemenu: pages === 'userManagement' }"><nuxt-link
-              to="/userManagement">จัดการผู้ใช้</nuxt-link></li>
+          <li :class="{ activemenu: pages === 'home' }"><nuxt-link
+              to="/home">Home</nuxt-link></li>
+              <!-- Add Photo -->
+          <li :class="{ activemenu: pages === 'addPhoto' }"><nuxt-link
+              to="/addPhoto">Add Photo</nuxt-link></li>
+              <!-- Add Query -->
+          <li :class="{ activemenu: pages === 'addQuery' }"><nuxt-link
+              to="/addQuery">Add Query</nuxt-link></li>
+              <!-- Manage Orders -->
+          <li :class="{ activemenu: pages === 'manageOrders' }"><nuxt-link
+              to="/manageOrders">Manage Orders</nuxt-link></li>
+
+
         </ul>
       </nav>
 
@@ -32,12 +35,12 @@
 
     <main class="main-content">
       <div class="header">
-        <h1>{{ pages }}</h1> <!-- แสดง username -->
+        <h1>{{ pages }}</h1>
       </div>
       <div class="content">
         
-        <Nuxt /> <!-- แสดงเนื้อหาของเพจ -->
-        <pre>{{ data }}</pre>
+        <Nuxt />
+        <!-- <pre>{{ data }}</pre> -->
       </div>
     </main>
   </div>
@@ -83,7 +86,7 @@ export default {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         // ผู้ใช้ได้เข้าสู่ระบบแล้ว
-        console.log("User is logged in:", user.uid);
+        // console.log("User is logged in:", user.uid);
 
         const uid = user.uid;
 
@@ -125,7 +128,7 @@ export default {
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: linear-gradient(180deg, #74C6F2 55%, #7197FF 100%);
+  background: #146799;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -168,7 +171,7 @@ export default {
 }
 
 .activemenu {
-  border-left: 5px solid #ffffff;
+  /* border-left: 5px solid #ffffff; */
   transition: all 0.3s ease-in-out;
   font-size: 1.1rem;
 }

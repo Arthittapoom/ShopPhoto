@@ -152,10 +152,19 @@
     padding: 0.5rem 1rem;
     margin: 0.5rem;
     cursor: pointer;
+    transition: all 0.1s ease-in-out;
+  }
+
+  .tags button:hover {
+    background-color: #146799;
+    transform: scale(1.01);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+    transition: all 0.1s ease-in-out;
+    color: white;
   }
   
   .image-grid-section {
-    padding: 1rem 0;
+    padding: 1rem 1rem 2rem 1rem;
   }
   
   .image-grid {
@@ -167,6 +176,13 @@
   .image-item img {
     width: 100%;
     border-radius: 5px;
+    transition: all 0.1s ease-in-out;
+  }
+  
+  .image-item img:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+    transition: all 0.1s ease-in-out;
   }
   
   .pagination-section {
@@ -175,16 +191,29 @@
   }
   
   .pagination-section button {
-    background-color: #007bff;
+    background-color: #146799;
     border: none;
     color: white;
     padding: 0.5rem 1rem;
     cursor: pointer;
     margin: 0 0.5rem;
+    border-radius: 5px;
+  }
+  
+  .pagination-section button:hover {
+    background-color: #327ab9; 
   }
   
   .pagination-section button:disabled {
     background-color: #ccc;
+  }
+
+  /* mobile */
+
+  @media (max-width: 768px) {
+    .image-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
   </style>
   

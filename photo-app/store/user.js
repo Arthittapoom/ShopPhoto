@@ -1,6 +1,6 @@
 export const state = () => ({
     username: 'Guest',
-    pages: 'dashboard'
+    pages: 'addPhoto'
   })
   
   export const mutations = {

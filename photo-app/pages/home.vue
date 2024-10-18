@@ -24,9 +24,9 @@
   
       <!-- Dynamic Popular Tags -->
       <section class="tags-section">
-        <h3>สำรวจคำค้นหายอดนิยมประจำสัปดาห์</h3>
+        <h3>คำค้นหายอดนิยมประจำสัปดาห์</h3>
         <div class="tags">
-          <button v-for="tag in popularTags" :key="tag" @click="filterByTag(tag)">
+          <button class="mt-4 mb-4" v-for="tag in popularTags" :key="tag" @click="filterByTag(tag)">
             {{ tag }}
           </button>
         </div>
@@ -34,7 +34,7 @@
   
       <!-- Dynamic Popular Image Categories -->
       <section class="popular-categories container">
-        <h3>หมวดหมู่ภาพถ่ายสต็อกที่กำลังเป็นที่นิยม</h3>
+        <h3 class="mb-4">หมวดหมู่ยอดนิยม</h3>
         <div class="category-grid">
           <div
             v-for="category in popularCategories"
@@ -42,36 +42,38 @@
             class="category-card"
           >
             <img :src="category.image" :alt="category.name" />
-            <p>{{ category.name }}</p>
+            <p class="m-4">{{ category.name }}</p>
           </div>
         </div>
       </section>
   
       <!-- Social Media Links -->
       <section class="social-media">
-        <h3>พร้อมที่จะเรียนรู้เพิ่มเติม?</h3>
+        <h3>พร้อมที่จะเรียนรู้เพิ่มเติม</h3>
         <div class="social-icons">
           <a href="#" class="social-icon">
-            <img src="https://dummyimage.com/200x200/ff00ff/fff" alt="YouTube" />
+            <img style="height: 40px; width: auto;" src="../static/home/Youtube.png" alt="YouTube" />
           </a>
           <a href="#" class="social-icon">
-            <img src="https://dummyimage.com/200x200/ff00ff/fff" alt="Instagram" />
+            <img style="height: 150px; width: auto; filter: invert(1);" src="../static/home/Instagram.png" alt="Instagram" />
           </a>
           <a href="#" class="social-icon">
-            <img src="https://dummyimage.com/200x200/ff00ff/fff" alt="Pinterest" />
+            <img style="height: 50px; width: auto; filter: invert(1);" src="../static/home/pinterest.png" alt="Pinterest" />
           </a>
         </div>
       </section>
   
       <!-- Dynamic Image Gallery -->
       <section class="gallery-section">
-        <h3>รูปภาพในคลัง</h3>
+        <!-- <h3>รูปภาพในคลัง</h3> -->
         <div class="gallery-grid container">
           <div v-for="image in galleryImages" :key="image.id" class="gallery-item">
             <img :src="image.url" :alt="image.alt" />
           </div>
         </div>
       </section>
+
+      <hr>
   
       <!-- FAQ Section -->
       <section class="faq-section">
@@ -206,13 +208,20 @@
   
   .category-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
   }
   
   .category-card img {
     width: 100%;
     border-radius: 5px;
+    transition: all 0.1s ease-in-out;
+  }
+
+  .category-card img:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+    transition: all 0.1s ease-in-out;
   }
   
   /* Social Media Section */
@@ -240,23 +249,33 @@
   
   .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
   }
   
   .gallery-item img {
     width: 100%;
     border-radius: 5px;
+    transition: all 0.1s ease-in-out;
+  }
+  
+  .gallery-item img:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+    transition: all 0.1s ease-in-out;
   }
   
   /* FAQ Section */
   .faq-section {
     text-align: center;
-    margin: 3rem 0;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
   }
   
   .faq-list p {
-    margin: 1rem 0;
+    text-align: left;
+    margin-top: 1rem;
+    margin-left: 20rem;
     cursor: pointer;
   }
   </style>
