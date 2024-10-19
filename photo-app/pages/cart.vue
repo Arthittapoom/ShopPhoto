@@ -46,7 +46,7 @@
                   </p>
                 </div>
                 <div class="col">
-                  <button v-if="item.status === 'Confirmation'" class="download-button"
+                  <button v-if="item.status === 'confirmation'" class="download-button"
                     @click="downloadItem(item)">Dorwnload</button>
                 </div>
               </div>
@@ -99,8 +99,10 @@
     </div>
   </div>
 </template>
-
 <script>
+import Swal from 'sweetalert2';
+import firebase from '~/plugins/firebase.js';  // ใช้ Firebase ในโปรเจกต์
+
 import Navbar from '~/components/Navbar.vue';
 
 export default {
@@ -108,48 +110,7 @@ export default {
   data() {
     return {
       statusFilter: '', // Filter value for status
-      cartItems: [
-        {
-          mediaType: 'Editorial image | 21234422',
-          licenseType: 'Rights-managed',
-          price: 100,
-          status: 'Not paid',
-          selected: false,
-          image: 'https://dummyimage.com/150x100/000/fff',
-        },
-        {
-          mediaType: 'Editorial image | 21234422',
-          licenseType: 'Rights-managed',
-          price: 100,
-          status: 'Waiting confirmation',
-          selected: false,
-          image: 'https://dummyimage.com/150x100/000/fff',
-        },
-        {
-          mediaType: 'Editorial image | 21234422',
-          licenseType: 'Rights-managed',
-          price: 100,
-          status: 'Confirmation',
-          selected: false,
-          image: 'https://dummyimage.com/150x100/000/fff',
-        },
-        {
-          mediaType: 'Editorial image | 21234422',
-          licenseType: 'Rights-managed',
-          price: 100,
-          status: 'Confirmation',
-          selected: false,
-          image: 'https://dummyimage.com/150x100/000/fff',
-        },
-        {
-          mediaType: 'Editorial image | 21234422',
-          licenseType: 'Rights-managed',
-          price: 100,
-          status: 'Confirmation',
-          selected: false,
-          image: 'https://dummyimage.com/150x100/000/fff',
-        },
-      ],
+      cartItems: [], // เริ่มต้นเป็น array ว่างสำหรับเก็บข้อมูลจาก Firebase
       payment: {
         name: 'กสัน จิราวุธ',
         bank: 'กสิกรไทย',
@@ -160,27 +121,71 @@ export default {
         date: '',
         bank: '',
       },
-      slipImageUrl: '',
+      slipImageUrl: '', // เก็บ URL ของสลิปที่อัพโหลด
+      file: null,  // เก็บไฟล์ที่เลือก
+      loading: false,  // สถานะการอัพโหลดไฟล์
     };
+  },
+  mounted() {
+    this.fetchCartItems(); // ดึงข้อมูลจาก Firebase เมื่อ component ถูกสร้างขึ้น
+    
   },
   computed: {
     filteredItems() {
-      // If a status is selected, filter by status, otherwise return all items
+      const user = firebase.auth().currentUser;
+    if (user) {
+      console.log('User:', user.multiFactor.user.uid);
+    }
+    
+      // ถ้าเลือกสถานะจะแสดงผลตามสถานะที่เลือก
       if (this.statusFilter) {
         return this.cartItems.filter((item) => item.status === this.statusFilter);
       }
       return this.cartItems;
     },
     selectedItems() {
-      // Return only selected items
+      // แสดงเฉพาะรายการที่ถูกเลือก
       return this.cartItems.filter((item) => item.selected);
     },
     selectedSubtotal() {
-      // Calculate subtotal of selected items
-      return this.selectedItems.reduce((total, item) => total + item.price, 0);
+      // คำนวณยอดรวมของรายการที่ถูกเลือก
+      return this.selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
     },
   },
   methods: {
+    fetchCartItems() {
+      firebase.database().ref('carts').on('value', (snapshot) => {
+        const items = [];
+        snapshot.forEach((childSnapshot) => {
+          const item = childSnapshot.val();
+          items.push({
+            mediaType: item.selectedImage.mediaType || 'Unknown media type',
+            licenseType: item.selectedImage.mediaLicense || 'Unknown license',
+            price: item.mediaPrice || 0,
+            image: item.selectedImage.imagePreview || 'https://dummyimage.com/150x100/000/fff',
+            price: item.selectedImage.mediaPrice || 0,
+            status: item.selectedImage.status || 'Not paid', // คุณสามารถปรับเปลี่ยนสถานะได้ตามที่คุณต้องการ
+            selected: false,
+            username: item.username || 'Unknown user', // เก็บข้อมูล username
+            data: item,
+          });
+        });
+        this.cartItems = items; // อัปเดตข้อมูล cartItems
+        Swal.fire({
+          title: 'Success!',
+          text: 'Cart items fetched successfully!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+      }, (error) => {
+        Swal.fire({
+          title: 'Error!',
+          text: `Failed to fetch cart items: ${error.message}`,
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      });
+    },
     statusClass(status) {
       if (status === 'Not paid') return 'not-paid';
       if (status === 'Waiting confirmation') return 'waiting-confirmation';
@@ -188,22 +193,91 @@ export default {
     },
     handleFileUpload(event) {
       const file = event.target.files[0];
-      this.slipImageUrl = URL.createObjectURL(file);
+      this.file = file;  // เก็บไฟล์ที่เลือกไว้เพื่ออัพโหลดในภายหลัง
+      this.slipImageUrl = URL.createObjectURL(file);  // แสดงรูปที่เลือกในหน้าเว็บ
+    },
+    async uploadSlipAndSavePayment() {
+      // เช็คว่ามีไฟล์หรือไม่
+      if (!this.file) {
+        Swal.fire('Error', 'Please select an image to upload.', 'error');
+        return;
+      }
+
+      try {
+        // แสดง loading ระหว่างการอัพโหลด
+        this.loading = true;
+
+        // อัพโหลดรูปไปที่ Firebase Storage
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(`slips/${this.file.name}`);
+        const snapshot = await fileRef.put(this.file);
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        // นำ URL ที่ได้มาเก็บใน slipImageUrl
+        this.slipImageUrl = downloadURL;
+
+        // สร้างข้อมูลการชำระเงิน
+        const Payment = {
+          ...this.transfer,
+          selectedSubtotal: this.selectedSubtotal,
+          slipImageUrl: this.slipImageUrl,  // ใช้ URL จาก Firebase
+          ...this.selectedItems
+        };
+
+        // บันทึกข้อมูลการชำระเงิน (คุณสามารถปรับให้เก็บลง Firebase Database หรืออื่นๆ ได้ตามต้องการ)
+        await firebase.database().ref('payments').push(Payment);
+
+        // แสดงข้อความเมื่อบันทึกเรียบร้อย
+        Swal.fire('Success', 'Payment processed successfully!', 'success');
+
+
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        this.loading = false;
+      }
     },
     processPayment() {
-      // alert('Payment processed!');
-      console.log(this.payment, this.transfer, this.slipImageUrl, this.selectedSubtotal);
+      // ตรวจสอบความครบถ้วนของข้อมูลการโอนเงิน
+      if (!this.transfer.name || !this.transfer.bank || !this.transfer.date) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Please fill in all required fields.',
+          icon: 'error',
+        });
+        return;
+      }
+
+      // เรียกฟังก์ชันอัพโหลดรูปและบันทึกข้อมูลการชำระเงิน
+      this.uploadSlipAndSavePayment();
     },
-    downloadItem(item) {
-      console.log(item)
-    },
+    async downloadItem(item) {
+  try {
+    console.log("Starting to download item:", item.image); // ดูว่า image URL มีค่าอะไร
+    
+    // อ้างอิงไปยังไฟล์ใน Firebase Storage
+    const storageRef = firebase.storage().refFromURL(item.image); // ใช้ URL จาก Firebase Storage
+    
+    // ดึง URL ที่สามารถดาวน์โหลดได้
+    const downloadURL = await storageRef.getDownloadURL();
+    console.log("Download URL:", downloadURL); // แสดง URL ที่ได้รับ
+
+    // เปิดหน้าต่างใหม่เพื่อดาวน์โหลดไฟล์
+    window.open(downloadURL, '_blank');
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    Swal.fire('Error', 'Failed to download file. Please try again later.', 'error');
+  }
+},
+
+
     removeItem(item) {
       this.cartItems = this.cartItems.filter((i) => i !== item);
     },
-
   },
 };
 </script>
+
 
 <style scoped>
 /* Overall Layout */
