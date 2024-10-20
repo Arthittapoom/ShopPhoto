@@ -28,11 +28,16 @@
       <h3 class="mb-4">หมวดหมู่ยอดนิยม</h3>
       <div class="category-grid">
         <div v-for="category in categoriesWithImages" :key="category.name" class="category-card">
-          <img :src="category.imagePreview" :alt="category.name" />
+          <div class="image-container">
+            <img :src="category.imagePreview" :alt="category.name" @click="goToHome" /> <!-- เพิ่ม @click -->
+            <div class="watermark">{{ category.name }}</div> <!-- ลายน้ำที่ต้องการ -->
+          </div>
           <p class="m-4">{{ category.name }}</p>
         </div>
       </div>
     </section>
+
+
 
     <!-- Social Media Links -->
     <section class="social-media">
@@ -42,10 +47,12 @@
           <img style="height: 40px; width: auto;" src="../static/home/Youtube.png" alt="YouTube" />
         </a>
         <a href="https://www.instagram.com/example" target="_blank" class="social-icon">
-          <img style="height: 150px; width: auto; filter: invert(1);" src="../static/home/Instagram.png" alt="Instagram" />
+          <img style="height: 150px; width: auto; filter: invert(1);" src="../static/home/Instagram.png"
+            alt="Instagram" />
         </a>
         <a href="https://www.pinterest.com/example" target="_blank" class="social-icon">
-          <img style="height: 50px; width: auto; filter: invert(1);" src="../static/home/pinterest.png" alt="Pinterest" />
+          <img style="height: 50px; width: auto; filter: invert(1);" src="../static/home/pinterest.png"
+            alt="Pinterest" />
         </a>
       </div>
     </section>
@@ -54,10 +61,15 @@
     <section class="gallery-section">
       <div class="gallery-grid container">
         <div v-for="image in galleryImages" :key="image.id" class="gallery-item">
-          <img :src="image.imagePreview" :alt="image.mediaName" @click="showImageDetails(image)" />
+          <div class="image-container">
+            <img :src="image.imagePreview" :alt="image.mediaName" @click="showImageDetails(image)" />
+            <div class="watermark">{{ image.mediaWatermark }}</div> <!-- ลายน้ำที่ต้องการ -->
+            <!-- <pre>{{ image }}</pre> -->
+          </div>
         </div>
       </div>
     </section>
+
 
     <hr>
 
@@ -65,12 +77,18 @@
     <section class="faq-section">
       <h3>คำถามที่พบบ่อย ?</h3>
       <div class="faq-list">
-        <div v-for="faq in faqs" :key="faq.query" @click="toggleAnswer(faq)">
-          <p>{{ faq.query }}</p>
-          <p v-if="faq.showAnswer">{{ faq.message }}</p>
+        <div v-for="faq in faqs" :key="faq.query" class="faq-item" @click="toggleAnswer(faq)">
+          <div class="faq-question">
+            <p>{{ faq.query }}</p>
+            <span class="faq-toggle-icon">{{ faq.showAnswer ? '-' : '+' }}</span>
+          </div>
+          <transition name="fade">
+            <p v-if="faq.showAnswer" class="faq-answer">{{ faq.message }}</p>
+          </transition>
         </div>
       </div>
     </section>
+
   </div>
 </template>
 
@@ -88,6 +106,14 @@ export default {
     };
   },
   methods: {
+
+    goToHome() {
+      this.$router.push('/board');
+    },
+
+    toggleAnswer(faq) {
+    faq.showAnswer = !faq.showAnswer;
+  },
     // Fetch gallery images from Firebase
     fetchGalleryImages() {
       firebase.database().ref('photos').on('value', (snapshot) => {
@@ -109,7 +135,7 @@ export default {
       firebase.database().ref('categories').on('value', (snapshot) => {
         const categories = snapshot.val();
         const categoriesWithImages = categories.map(category => {
-          const categoryImages = images.filter(image => 
+          const categoryImages = images.filter(image =>
             image.mediaCategories && image.mediaCategories.includes(category)
           );
           // Return category with the first image as representative
@@ -155,19 +181,39 @@ export default {
     showImageDetails(image) {
       Swal.fire({
         title: image.mediaName,
-        text: `License: ${image.mediaLicense}, Price: ${image.mediaPrice}`,
-        imageUrl: image.imagePreview,
-        imageWidth: 400,
-        imageAlt: 'Image Preview',
+        html: `
+      <div style="position: relative; display: inline-block;">
+        <img src="${image.imagePreview}" alt="Image Preview" style="width: 100%; height: auto; max-width: 400px;"/>
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 24px;
+          font-weight: bold;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+          pointer-events: none;
+        ">${image.mediaWatermark}</div></div>
+      </div>
+      <p>License: ${image.mediaLicense}</p>
+      <p>Price: ${image.mediaPrice}</p>
+    `,
         showCancelButton: true,
         confirmButtonText: 'ตกลง',
-        cancelButtonText: 'กลับ'
+        cancelButtonText: 'กลับ',
+        width: '50%',
+        padding: '1rem',
       });
+
+      // ไปยังหน้า /board
+      this.$router.push('/board');
     },
+
 
     // Navigate to pricing plans
     viewPlans() {
-      window.location.href = '/plans'; 
+      window.location.href = '/plans';
     }
   },
 
@@ -180,6 +226,116 @@ export default {
 </script>
 
 <style scoped>
+.faq-section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+}
+
+.faq-section h3 {
+  text-align: center;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item {
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.faq-item:hover {
+  background-color: #eaeaea;
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.faq-toggle-icon {
+  font-size: 1.5rem;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+.faq-answer {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+.image-container {
+  position: relative;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.5);
+  /* สีขาวโปร่งใส */
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none;
+  /* ป้องกันไม่ให้ลายน้ำรับการคลิก */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  /* เพิ่มเงาให้ลายน้ำ */
+}
+
+/* สำหรับภาพหมวดหมู่ยอดนิยม */
+.category-card img {
+  width: 100%;
+  border-radius: 5px;
+  transition: all 0.1s ease-in-out;
+}
+
+.category-card img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+  transition: all 0.1s ease-in-out;
+}
+
+/* สำหรับภาพแกลเลอรี */
+.gallery-item img {
+  width: 100%;
+  border-radius: 5px;
+  transition: all 0.1s ease-in-out;
+}
+
+.gallery-item img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
+  transition: all 0.1s ease-in-out;
+}
+
 /* Basic Layout */
 .container {
   max-width: 1200px;
@@ -301,7 +457,7 @@ export default {
 }
 
 /* FAQ Section */
-.faq-section {
+/* .faq-section {
   text-align: center;
   margin-top: 3rem;
   margin-bottom: 3rem;
@@ -312,5 +468,5 @@ export default {
   margin-top: 1rem;
   margin-left: 20rem;
   cursor: pointer;
-}
+} */
 </style>

@@ -65,6 +65,7 @@
                 </div>
             </div>
             <div style="text-align: end;">
+                <!-- ปุ่มแสดงการโหลดหรือปุ่มเพิ่มภาพ -->
                 <button v-if="!loading" class="add-photo-button" @click="uploadImageAndSaveData">Add Photo</button>
                 <div v-if="loading" class="spinner-border text-warning" role="status">
                     <span class="sr-only">Loading...</span>
@@ -74,134 +75,145 @@
     </div>
 </template>
 
+
 <script>
-import Swal from 'sweetalert2'
-import firebase from '~/plugins/firebase.js'  // อย่าลืมตั้งค่า Firebase ใน plugins
+import Swal from 'sweetalert2';
+import firebase from '~/plugins/firebase.js';  // อย่าลืมตั้งค่า Firebase ใน plugins
 
 export default {
-    layout: 'MenuBar',
+  layout: 'MenuBar',
 
-    async asyncData({ store }) {
-        const page = 'addPhoto';
-        store.commit('user/setPages', page);
+  async asyncData({ store }) {
+    const page = 'addPhoto';
+    store.commit('user/setPages', page);
+  },
+
+  data() {
+    return {
+      mediaName: '',
+      mediaWatermark: '',
+      mediaType: '',
+      mediaPrice: null,
+      mediaLicense: '',
+      mediaCategories: [],
+      availableCategories: ['Nature', 'Animals', 'Technology', 'People', 'Travel'],
+      newCategory: '',
+      selectedCategory: '', 
+      imagePreview: null,
+      file: null,
+      loading: false,  // ตัวแปรจัดการการโหลด
+    };
+  },
+
+  methods: {
+    onImageChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.file = file;  // เก็บไฟล์ลงใน data
+        this.imagePreview = URL.createObjectURL(file);  // แสดงตัวอย่างภาพ
+      }
     },
 
-    data() {
-        return {
-            mediaName: '',
-            mediaWatermark: '',
-            mediaType: '',
-            mediaPrice: null,
-            mediaLicense: '',
-            mediaCategories: [],
-            availableCategories: ['Nature', 'Animals', 'Technology', 'People', 'Travel'],
-            newCategory: '',
-            selectedCategory: '', 
-            imagePreview: null,
-            file: null,
-            loading: false,
+    async uploadImageAndSaveData() {
+      // แสดงการโหลด
+      this.loading = true;
+
+      if (!this.file) {
+        Swal.fire('Error', 'Please select an image to upload.', 'error');
+        this.loading = false;
+        return;
+      }
+
+      const storageRef = firebase.storage().ref();
+      const fileRef = storageRef.child(`images/${this.file.name}`);
+
+      try {
+        // แสดง Swal กำลังโหลด
+        Swal.fire({
+          title: 'Uploading...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        // อัพโหลดรูปไปที่ Firebase Storage
+        const snapshot = await fileRef.put(this.file);
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        // เตรียมข้อมูลที่จะเก็บใน Realtime Database
+        const photoData = {
+          mediaName: this.mediaName,
+          mediaWatermark: this.mediaWatermark,
+          mediaType: this.mediaType,
+          mediaPrice: this.mediaPrice,
+          mediaLicense: this.mediaLicense,
+          mediaCategories: this.mediaCategories,
+          imagePreview: downloadURL  // เก็บ URL ของรูปภาพที่อัพโหลด
         };
-    },
-    methods: {
-        onImageChange(event) {
-            const file = event.target.files[0];
-            if (file) {
-                this.file = file;  // เก็บไฟล์ลงใน data
-                this.imagePreview = URL.createObjectURL(file);  // แสดงตัวอย่างภาพ
-            }
-        },
-        async uploadImageAndSaveData() {
-            this.loading = true;
-            if (!this.file) {
-                Swal.fire('Error', 'Please select an image to upload.', 'error');
-                return;
-            }
 
-            const storageRef = firebase.storage().ref();
-            const fileRef = storageRef.child(`images/${this.file.name}`);
+        // เก็บข้อมูลลงใน Realtime Database
+        const dbRef = firebase.database().ref('photos');
+        await dbRef.push(photoData);
 
-            try {
-                // อัพโหลดรูปไปที่ Firebase Storage
-                const snapshot = await fileRef.put(this.file);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-
-                // เตรียมข้อมูลที่จะเก็บใน Realtime Database
-                const photoData = {
-                    mediaName: this.mediaName,
-                    mediaWatermark: this.mediaWatermark,
-                    mediaType: this.mediaType,
-                    mediaPrice: this.mediaPrice,
-                    mediaLicense: this.mediaLicense,
-                    mediaCategories: this.mediaCategories,  // ส่งค่าที่เลือกเก็บลงใน Realtime Database
-                    imagePreview: downloadURL  // เก็บ URL ของรูปภาพที่อัพโหลด
-                };
-
-                // เก็บข้อมูลลงใน Realtime Database
-                const dbRef = firebase.database().ref('photos');  // เลือกเส้นทางใน Realtime Database
-                await dbRef.push(photoData);
-
-                Swal.fire('Success', 'Photo uploaded and data saved successfully!', 'success');
-                this.loading = false;
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            }
-        },
-        addNewCategory() {
-            if (this.newCategory && !this.availableCategories.includes(this.newCategory)) {
-                // อัปเดตหมวดหมู่ใน availableCategories ทันที
-                this.availableCategories.push(this.newCategory);
-
-                // เพิ่มหมวดหมู่ใหม่ใน Firebase Realtime Database
-                const dbRef = firebase.database().ref('categories');  // สมมติว่าเก็บหมวดหมู่ใน 'categories'
-
-                dbRef.set(this.availableCategories)
-                    .then(() => {
-                        Swal.fire('Success', 'New category added successfully!', 'success');
-                    })
-                    .catch((error) => {
-                        Swal.fire('Error', error.message, 'error');
-                    });
-
-                // เคลียร์ฟิลด์หลังจากเพิ่มหมวดหมู่ใหม่
-                this.newCategory = '';
-            } else {
-                Swal.fire('Error', 'Category already exists or invalid.', 'error');
-            }
-        },
-
-        // ฟังก์ชันดึง categories จาก Firebase และแทนที่ this.availableCategories
-        getCategories() {
-            const dbRef = firebase.database().ref('categories');  // อ้างอิงไปที่ตำแหน่ง 'categories'
-
-            // ใช้ on('value') เพื่อดึงข้อมูลเมื่อมีการเปลี่ยนแปลง
-            dbRef.on('value', (snapshot) => {
-                const categoriesData = snapshot.val();
-                if (categoriesData) {
-                    // แทนที่ this.availableCategories ด้วยข้อมูลจาก Firebase
-                    this.availableCategories = Object.values(categoriesData);
-                } else {
-                    this.availableCategories = [];  // ไม่มีข้อมูลให้เป็น array ว่างเปล่า
-                }
-            });
-        },
-
-        addSelectedCategory() {
-            if (this.selectedCategory && !this.mediaCategories.includes(this.selectedCategory)) {
-                this.mediaCategories.push(this.selectedCategory);
-                this.selectedCategory = '';  // รีเซ็ตการเลือก
-            } else {
-                Swal.fire('Error', 'Category already selected or invalid.', 'error');
-            }
-        },
-        removeCategory(index) {
-            this.mediaCategories.splice(index, 1);
-        },
+        Swal.fire('Success', 'Photo uploaded and data saved successfully!', 'success');
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        this.loading = false;  // ปิดการโหลด
+      }
     },
 
-    mounted() {
-        this.getCategories();
-    }
+    addNewCategory() {
+      if (this.newCategory && !this.availableCategories.includes(this.newCategory)) {
+        this.availableCategories.push(this.newCategory);
+
+        const dbRef = firebase.database().ref('categories');
+        dbRef.set(this.availableCategories)
+          .then(() => {
+            Swal.fire('Success', 'New category added successfully!', 'success');
+          })
+          .catch((error) => {
+            Swal.fire('Error', error.message, 'error');
+          });
+
+        this.newCategory = '';  // รีเซ็ตฟิลด์
+      } else {
+        Swal.fire('Error', 'Category already exists or invalid.', 'error');
+      }
+    },
+
+    getCategories() {
+      const dbRef = firebase.database().ref('categories');
+      dbRef.on('value', (snapshot) => {
+        const categoriesData = snapshot.val();
+        if (categoriesData) {
+          this.availableCategories = Object.values(categoriesData);
+        } else {
+          this.availableCategories = [];
+        }
+      });
+    },
+
+    addSelectedCategory() {
+      if (this.selectedCategory && !this.mediaCategories.includes(this.selectedCategory)) {
+        this.mediaCategories.push(this.selectedCategory);
+        this.selectedCategory = '';  // รีเซ็ตการเลือก
+      } else {
+        Swal.fire('Error', 'Category already selected or invalid.', 'error');
+      }
+    },
+
+    removeCategory(index) {
+      this.mediaCategories.splice(index, 1);
+    },
+  },
+
+  mounted() {
+    this.getCategories();
+  }
 };
+
 
 
 </script>
@@ -214,7 +226,6 @@ export default {
     padding: 20px;
     background-color: #f9f9f9;
     border-radius: 10px;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .form-grid {
@@ -240,11 +251,6 @@ img {
     height: auto;
 }
 
-.upload-section h1 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-}
-
 .file-input {
     padding: 10px;
     background-color: #f1f1f1;
@@ -257,15 +263,6 @@ img {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
-}
-
-.category-select,
-.category-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 100%;
-    max-width: 200px;
 }
 
 .add-category-button {
@@ -315,17 +312,6 @@ img {
     gap: 20px;
 }
 
-.form-field {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
 .add-photo-button {
     padding: 10px 20px;
     background-color: #28a745;
@@ -360,4 +346,5 @@ img {
 .scrollable-content::-webkit-scrollbar-thumb:hover {
     background-color: #888888;
 }
+
 </style>

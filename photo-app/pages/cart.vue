@@ -27,18 +27,24 @@
           </div>
         </div>
 
+        <!-- Loading Spinner -->
+        <div v-if="loading" class="loading-container">
+          <div class="spinner-border text-warning" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
 
-        <div class="scrollable-content">
+        <div v-else class="scrollable-content">
           <!-- Cart Items List -->
-          <div v-for="(item, index) in filteredItems" :key="index" class="cart-item ">
-            <img :src="item.image" alt="item image" class="item-image" />
+          <div v-for="(item, index) in filteredItems" :key="index" class="cart-item">
+            <div class="image-container">
+              <img :src="item.image" alt="item image" class="item-image" />
+              <div class="watermark">{{ item.mediaWatermark }}</div>
+            </div>
             <div class="item-details">
               <p><strong>Media type:</strong> {{ item.mediaType }}</p>
               <p><strong>License type:</strong> <a href="#">{{ item.licenseType }}</a></p>
               <p><strong>Price:</strong> {{ item.price }} THB</p>
-
-              <!-- row -->
-
               <div class="row">
                 <div class="col-7">
                   <p :class="statusClass(item.status)" class="item-status">
@@ -46,11 +52,11 @@
                   </p>
                 </div>
                 <div class="col">
-                  <button v-if="item.status === 'confirmation'" class="download-button"
-                    @click="downloadItem(item)">Dorwnload</button>
+                  <button v-if="item.status === 'confirmation'" class="download-button" @click="downloadItem(item)">
+                    Download
+                  </button>
                 </div>
               </div>
-
               <button class="remove-button" @click="removeItem(item)">Remove</button>
             </div>
             <input type="checkbox" v-model="item.selected" class="select-item-checkbox" />
@@ -99,19 +105,16 @@
     </div>
   </div>
 </template>
+
 <script>
 import Swal from 'sweetalert2';
-import firebase from '~/plugins/firebase.js';  // ใช้ Firebase ในโปรเจกต์
-
-import Navbar from '~/components/Navbar.vue';
-import { onUpdated } from 'vue';
+import firebase from '~/plugins/firebase.js';
 
 export default {
-  components: { Navbar },
   data() {
     return {
-      statusFilter: '', // Filter value for status
-      cartItems: [], // เริ่มต้นเป็น array ว่างสำหรับเก็บข้อมูลจาก Firebase
+      statusFilter: '',
+      cartItems: [],
       payment: {
         name: 'กสัน จิราวุธ',
         bank: 'กสิกรไทย',
@@ -122,20 +125,20 @@ export default {
         date: '',
         bank: '',
       },
-      slipImageUrl: '', // เก็บ URL ของสลิปที่อัพโหลด
-      file: null,  // เก็บไฟล์ที่เลือก
-      loading: false,  // สถานะการอัพโหลดไฟล์
+      slipImageUrl: '',
+      file: null,
+      loading: false,
       uid: '',
       email: '',
     };
   },
+
   async mounted() {
     try {
-      // รอจนกว่าผู้ใช้จะถูกดึงมาได้อย่างสมบูรณ์
       const user = await new Promise((resolve, reject) => {
         const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
           if (user) {
-            unsubscribe(); // ยกเลิกการสมัครเมื่อได้ข้อมูลผู้ใช้แล้ว
+            unsubscribe();
             resolve(user);
           } else {
             reject('No user is signed in');
@@ -143,12 +146,10 @@ export default {
         });
       });
 
-      // ตรวจสอบว่ามี multiFactor ก่อนเข้าถึง uid
       if (user.multiFactor) {
         this.email = user.multiFactor.user.email;
-        // console.log("User email:", this.email);
         this.uid = user.multiFactor.user.uid;
-        await this.fetchCartItems(this.uid); // ดึงข้อมูลจาก Firebase เมื่อ component ถูกสร้างขึ้น
+        await this.fetchCartItems(this.uid);
       } else {
         console.error("User does not have multiFactor information.");
       }
@@ -157,47 +158,38 @@ export default {
     }
   },
 
-
   computed: {
     filteredItems() {
-      // ถ้าเลือกสถานะจะแสดงผลตามสถานะที่เลือก
       if (this.statusFilter) {
         return this.cartItems.filter((item) => item.status === this.statusFilter);
       }
       return this.cartItems;
     },
-    selectedItems() {
-      // กรองเฉพาะรายการที่ถูกเลือก
-      const data = this.cartItems
-        .filter((item) => item.selected)
-        .map((item) => {
-          return {
-            ...item, // คัดลอกข้อมูลของ item ทั้งหมด
-            status: 'Waiting confirmation', // เปลี่ยนสถานะ
-          };
-        });
 
-      // console.log(data);
-      return data;
+    selectedItems() {
+      return this.cartItems
+        .filter((item) => item.selected)
+        .map((item) => ({
+          ...item,
+          status: 'Waiting confirmation',
+        }));
     },
 
     selectedSubtotal() {
-      // คำนวณยอดรวมของรายการที่ถูกเลือก
       return this.selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
     },
   },
+
   methods: {
     async fetchCartItems(uid) {
-
-      // console.log(user.multiFactor.user.uid);
+      this.loading = true;
 
       await firebase.database().ref('carts').on('value', (snapshot) => {
         if (!uid) {
           Swal.fire('warning', '', 'warning');
           return;
         }
-        this.cartItems = []; // รีเซ็ต cartItems ทุกครั้งที่มีการเปลี่ยนแปลงข้อมูล
-
+        this.cartItems = [];
         const data = snapshot.val();
         Object.entries(data).forEach(([cartid, item]) => {
           if (item.userId === uid) {
@@ -210,87 +202,74 @@ export default {
                 price: imageData.mediaPrice,
                 status: item.status || 'Not paid',
                 selected: false,
-                id: cartid
+                id: cartid,
+                mediaWatermark: imageData.mediaWatermark,
               });
             });
           }
         });
+        this.loading = false;
       });
     },
 
-    statusClass(status) {
-      if (status === 'Not paid') return 'not-paid';
-      if (status === 'Waiting confirmation') return 'waiting-confirmation';
-      return 'confirmation';
-    },
     handleFileUpload(event) {
       const file = event.target.files[0];
-      this.file = file;  // เก็บไฟล์ที่เลือกไว้เพื่ออัพโหลดในภายหลัง
-      this.slipImageUrl = URL.createObjectURL(file);  // แสดงรูปที่เลือกในหน้าเว็บ
+      this.file = file;
+      this.slipImageUrl = URL.createObjectURL(file);
     },
 
     async UpdatedselectedItems() {
-      // อัพเดต status = 'Waiting confirmation' ของ รายการที่ถูกเลือกใน this.selectedItems
-      // console.log(this.selectedItems)
       this.selectedItems.forEach((item) => {
-        // console.log(item.id)
         firebase.database().ref('carts/' + item.id).update({
           status: 'Waiting confirmation'
         })
       })
     },
-    async uploadSlipAndSavePayment() {
 
-      // เช็คว่ามีไฟล์หรือไม่
+    async uploadSlipAndSavePayment() {
       if (!this.file) {
         Swal.fire('Error', 'Please select an image to upload.', 'error');
         return;
       }
 
       try {
-        // แสดง loading ระหว่างการอัพโหลด
         this.loading = true;
 
-        // อัพโหลดรูปไปที่ Firebase Storage
         const storageRef = firebase.storage().ref();
         const fileRef = storageRef.child(`slips/${this.file.name}`);
         const snapshot = await fileRef.put(this.file);
         const downloadURL = await snapshot.ref.getDownloadURL();
 
-        // นำ URL ที่ได้มาเก็บใน slipImageUrl
         this.slipImageUrl = downloadURL;
-
         await this.UpdatedselectedItems()
 
-        // สร้างข้อมูลการชำระเงิน
-        const Payment = {
-          transfer: this.transfer,
-          selectedSubtotal: this.selectedSubtotal,
-          slipImageUrl: this.slipImageUrl,
-          order: this.selectedItems,
-          uid: this.uid,
-          email : this.email,
-          status : 'Waiting confirmation'
-        };
+        if (this.selectedItems && this.selectedItems.length > 0) {
+          const Payment = {
+            transfer: this.transfer,
+            selectedSubtotal: this.selectedSubtotal,
+            slipImageUrl: this.slipImageUrl,
+            order: this.selectedItems,
+            uid: this.uid,
+            email: this.email,
+            status: 'Waiting confirmation'
+          };
 
-        if (!Payment.transfer || !Payment.order || !Payment.uid) {
-          Swal.fire('Error', 'Please fill in all required fields.', 'error');
-          return;
+          if (!Payment.transfer || !Payment.order || !Payment.uid) {
+            Swal.fire('Error', 'Please fill in all required fields.', 'error');
+            return;
+          }
+
+          await firebase.database().ref('payments').push(Payment);
+
+          this.transfer = {};
+          this.selectedItems = [];
+          this.slipImageUrl = null;
+
+          Swal.fire('Success', 'Payment processed successfully!', 'success');
+        } else {
+          Swal.fire('Error', 'No items selected.', 'error');
         }
 
-        // console.log(Payment)
-
-        // บันทึกข้อมูลการชำระเงิน (คุณสามารถปรับให้เก็บลง Firebase Database หรืออื่นๆ ได้ตามต้องการ)
-        await firebase.database().ref('payments').push(Payment);
-
-        // ล้างข้อมูลใน this.transfer และ this.selectedItems และ this.slipImageUrl
-        this.transfer = {};
-        this.selectedItems = [];
-        this.slipImageUrl = null;
-        
-
-        // แสดงข้อความเมื่อบันทึกเรียบร้อย
-        Swal.fire('Success', 'Payment processed successfully!', 'success');
 
 
       } catch (error) {
@@ -299,8 +278,8 @@ export default {
         this.loading = false;
       }
     },
+
     processPayment() {
-      // ตรวจสอบความครบถ้วนของข้อมูลการโอนเงิน
       if (!this.transfer.name || !this.transfer.bank || !this.transfer.date) {
         Swal.fire({
           title: 'Error!',
@@ -310,31 +289,26 @@ export default {
         return;
       }
 
-      // เรียกฟังก์ชันอัพโหลดรูปและบันทึกข้อมูลการชำระเงิน
       this.uploadSlipAndSavePayment();
     },
+
     async downloadItem(item) {
       try {
-        // console.log("Starting to download item:", item.image); // ดูว่า image URL มีค่าอะไร
-
-        // อ้างอิงไปยังไฟล์ใน Firebase Storage
-        const storageRef = firebase.storage().refFromURL(item.image); // ใช้ URL จาก Firebase Storage
-
-        // ดึง URL ที่สามารถดาวน์โหลดได้
+        const storageRef = firebase.storage().refFromURL(item.image);
         const downloadURL = await storageRef.getDownloadURL();
-        // console.log("Download URL:", downloadURL); // แสดง URL ที่ได้รับ
-
-        // เปิดหน้าต่างใหม่เพื่อดาวน์โหลดไฟล์
         window.open(downloadURL, '_blank');
       } catch (error) {
-        console.error('Error downloading file:', error);
         Swal.fire('Error', 'Failed to download file. Please try again later.', 'error');
       }
     },
 
-
     removeItem(item) {
       this.cartItems = this.cartItems.filter((i) => i !== item);
+    },
+    statusClass(status) {
+      if (status === 'Not paid') return 'not-paid';
+      if (status === 'Waiting confirmation') return 'waiting-confirmation';
+      return 'confirmation';
     },
   },
 };
@@ -417,6 +391,34 @@ export default {
 .scrollable-content::-webkit-scrollbar-thumb:hover {
   background-color: #ffffff;
 }
+
+.image-container {
+  position: relative;
+}
+
+.item-image {
+  width: 150px;
+  height: 100px;
+  margin-right: 1rem;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.5);
+  /* สีขาวโปร่งใส */
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none;
+  /* ป้องกันไม่ให้ลายน้ำรับการคลิก */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  /* เพิ่มเงาเพื่อให้เห็นชัด */
+}
+
 
 .item-image {
   width: 150px;

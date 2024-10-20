@@ -27,6 +27,7 @@
       <div class="image-grid">
         <div v-for="image in filteredImages" :key="image.id" class="image-item" @click="showImageDetails(image)">
           <img :src="image.imagePreview" :alt="image.mediaName" />
+          <div class="watermark">{{ image.mediaWatermark }}</div>
         </div>
       </div>
     </section>
@@ -130,11 +131,24 @@ export default {
       Swal.fire({
         title: image.mediaName,
         html: `
+    <div style="position: relative; display: inline-block; width: 100%; max-width: 400px;">
       <img src="${image.imagePreview}" alt="${image.mediaName}" style="width: 100%; height: auto; max-height: 60vh; object-fit: contain; margin-bottom: 15px;" />
-      <p><strong>Categories:</strong> ${image.mediaCategories}</p>
-      <p><strong>License:</strong> ${image.mediaLicense}</p>
-      <p><strong>Price:</strong> ${image.mediaPrice}</p>
-    `,
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        pointer-events: none;
+      ">${image.mediaWatermark}</div>
+    </div>
+    <p><strong>Categories:</strong> ${image.mediaCategories}</p>
+    <p><strong>License:</strong> ${image.mediaLicense}</p>
+    <p><strong>Price:</strong> ${image.mediaPrice}</p>
+  `,
         showCancelButton: true,
         confirmButtonText: 'ตกลง',
         cancelButtonText: 'กลับ',
@@ -146,7 +160,7 @@ export default {
             const user = await firebase.auth().currentUser;
 
             if (user) {
-              const userId = await user.multiFactor.user.uid
+              const userId = await user.multiFactor.user.uid;
               if (userId) {
                 // รวมข้อมูลผู้ใช้กับข้อมูลรูปภาพที่เลือก
                 const selectedUser = {
@@ -155,9 +169,7 @@ export default {
                   status: 'Not paid',
                 };
 
-                // console.log(selectedUser);
-
-                // // บันทึกข้อมูลใน Firebase Realtime Database
+                // บันทึกข้อมูลใน Firebase Realtime Database
                 const orderRef = firebase.database().ref('carts');
                 await orderRef.push(selectedUser); // ใช้ push เพื่อเพิ่มข้อมูลใหม่ใน orders
 
@@ -172,6 +184,7 @@ export default {
           }
         }
       });
+
     },
 
 
@@ -264,17 +277,36 @@ export default {
   gap: 0.2rem;
 }
 
+.image-item {
+  position: relative;
+  /* ทำให้สามารถวางลายน้ำไว้บนรูปภาพ */
+}
+
 .image-item img {
   width: 100%;
   border-radius: 5px;
   transition: all 0.1s ease-in-out;
 }
 
-.image-item img:hover {
+.image-item:hover img {
   transform: scale(1.01);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.196);
   transition: all 0.1s ease-in-out;
 }
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.5);
+  /* สีขาวโปร่งใส */
+  font-size: 24px;
+  font-weight: bold;
+  pointer-events: none;
+  /* ป้องกันไม่ให้ลายน้ำรับการคลิก */
+}
+
 
 .pagination-section {
   text-align: center;

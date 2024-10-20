@@ -5,19 +5,15 @@
         <div class="order-list container scrollable-content">
             <!-- Orders Loop -->
             <div v-for="(order, index) in orders" :key="index" class="order-item">
-                <!-- <div class="order-image">
-                    <img :src="order.image" alt="Order Image" />
-                </div> -->
                 <div class="order-details">
                     <p><strong>email: </strong> {{ order.email ? order.email : 'No email' }}</p>
                     <p><strong>Total photos: </strong> {{ order.order ? order.order.length : 0 }}</p>
-                    <!-- ตรวจสอบว่ามี order และเป็นอาเรย์ -->
                     <p><strong>Price photos:</strong> {{ order.selectedSubtotal }} THB</p>
                 </div>
 
                 <div class="order-details">
-                    <p><strong>bank slip:</strong> {{ order.transfer && order.transfer.bank ? order.transfer.bank
-                        : 'N/A' }}</p>
+                    <p><strong>bank slip:</strong> {{ order.transfer && order.transfer.bank ? order.transfer.bank :
+                        'N/A' }}</p>
                     <p><strong>name slip:</strong> {{ order.transfer && order.transfer.name ? order.transfer.name :
                         'N/A' }}</p>
                     <p><strong>date slip:</strong> {{ order.transfer && order.transfer.date ? order.transfer.date :
@@ -25,22 +21,16 @@
                 </div>
 
                 <div class="order-action">
-                    <button @click="openModal(order)">Transfer slip</button>
+                    <button @click="showTransferSlip(order)">Transfer slip</button>
                     <p><strong>status:</strong> {{ order.status || 'N/A' }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Transfer Slip Modal -->
-        <div v-if="showModal" class="modal-overlay">
-            <div class="modal-content">
-                <h3>Transfer slip</h3>
-                <img :src="selectedOrder.slipImageUrl" alt="Order Slip" />
-                <div class="modal-actions">
-                    <button class="cancel-button" @click="closeModal">Cancel</button>
-                    <button class="confirm-button" @click="confirmOrder">Confirm</button>
-                </div>
-            </div>
+        <!-- Custom Loading Spinner -->
+        <div v-if="isLoading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>Loading...</p>
         </div>
     </div>
 </template>
@@ -48,6 +38,7 @@
 <script>
 import Swal from 'sweetalert2';
 import firebase from '~/plugins/firebase.js';
+
 export default {
     layout: 'MenuBar',
 
@@ -58,47 +49,8 @@ export default {
 
     data() {
         return {
-            orders: [
-                {
-                    image: 'https://dummyimage.com/300x200/000/fff',
-                    mediaName: 'Media name',
-                    mediaCategory: 'Media Category',
-                    mediaWatermark: 'Media watermark',
-                    mediaType: 'Media type',
-                    mediaPrice: 'Media price',
-                    mediaLicense: 'Media License',
-                },
-                {
-                    image: 'https://dummyimage.com/300x200/000/fff',
-                    mediaName: 'Media name',
-                    mediaCategory: 'Media Category',
-                    mediaWatermark: 'Media watermark',
-                    mediaType: 'Media type',
-                    mediaPrice: 'Media price',
-                    mediaLicense: 'Media License',
-                },
-                {
-                    image: 'https://dummyimage.com/300x200/000/fff',
-                    mediaName: 'Media name',
-                    mediaCategory: 'Media Category',
-                    mediaWatermark: 'Media watermark',
-                    mediaType: 'Media type',
-                    mediaPrice: 'Media price',
-                    mediaLicense: 'Media License',
-                },
-                {
-                    image: 'https://dummyimage.com/300x200/000/fff',
-                    mediaName: 'Media name',
-                    mediaCategory: 'Media Category',
-                    mediaWatermark: 'Media watermark',
-                    mediaType: 'Media type',
-                    mediaPrice: 'Media price',
-                    mediaLicense: 'Media License',
-                },
-                // Additional orders can be added here
-            ],
-            showModal: false,
-            selectedOrder: null,
+            orders: [],
+            isLoading: false,
         };
     },
 
@@ -108,48 +60,76 @@ export default {
 
     methods: {
         async fetchOrders() {
-            firebase.database().ref('payments').on('value', (snapshot) => {
-                this.orders = []; // ล้างข้อมูลเก่า
-                snapshot.forEach((childSnapshot) => {
-                    const orderData = {
-                        ...childSnapshot.val(), // ดึงข้อมูลของแต่ละออบเจ็กต์
-                        id: childSnapshot.key   // เพิ่มคีย์ลงในข้อมูลของแต่ละรายการ
-                    };
-                    this.orders.push(orderData); // เพิ่มรายการนี้ในอาเรย์ orders
+            try {
+                // ใช้ 'on' แทน 'once' เพื่อฟังการเปลี่ยนแปลงข้อมูลแบบเรียลไทม์
+                firebase.database().ref('payments').on('value', (snapshot) => {
+                    this.orders = []; // เคลียร์ orders ก่อน
+                    snapshot.forEach((childSnapshot) => {
+                        const orderData = {
+                            ...childSnapshot.val(),
+                            id: childSnapshot.key,
+                        };
+                        this.orders.push(orderData); // เพิ่มข้อมูลใหม่ที่ดึงมา
+                    });
                 });
-                // console.log(this.orders); // ตรวจสอบข้อมูล
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+
+        showTransferSlip(order) {
+            Swal.fire({
+                title: 'Transfer Slip',
+                html: `
+            <p><strong>Email:</strong> ${order.email ? order.email : 'No email'}</p>
+            <p><strong>Total Photos:</strong> ${order.order ? order.order.length : 0}</p>
+            <p><strong>Price Photos:</strong> ${order.selectedSubtotal} THB</p>
+            <img src="${order.slipImageUrl}" alt="Order Slip" style="width: 100%; height: auto; margin-top: 10px;">
+          `,
+                showCancelButton: true,
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => this.confirmOrder(order)
             });
         },
 
+        async confirmOrder(order) {
+            try {
+                Swal.fire({
+                    title: 'Confirming order...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-        openModal(order) {
-            this.selectedOrder = order;
-            this.showModal = true;
-        },
-        closeModal() {
-            this.showModal = false;
-            this.selectedOrder = null;
-        },
-        confirmOrder() {
-            // Handle order confirmation logic here
-            // console.log('Order confirmed:', this.selectedOrder.order);
-            this.selectedOrder.order.forEach((item) => {
-                firebase.database().ref('carts/' + item.id).update({
-                    status: 'confirmation'
-                })
-            })
+                // Update status carts
+                for (const item of order.order) {
+                    await firebase.database().ref('carts/' + item.id).update({
+                        status: 'confirmation',
+                    });
+                }
 
-            // update status payments to confirmation
-            firebase.database().ref('payments/' + this.selectedOrder.id).update({
-                status: 'confirmation'
-            })
+                // Update status payments
+                await firebase.database().ref('payments/' + order.id).update({
+                    status: 'confirmation',
+                });
 
-            this.closeModal();
+
+                Swal.fire('Success!', 'Order confirmed successfully!', 'success');
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: `Failed to confirm order: ${error.message}`,
+                    confirmButtonText: 'OK',
+                });
+            }
         },
     },
 };
 </script>
-
 <style scoped>
 .manage-orders-container {
     max-width: auto;
@@ -170,12 +150,6 @@ export default {
     padding: 20px 0;
 }
 
-.order-image img {
-    width: 150px;
-    height: 100px;
-    object-fit: cover;
-}
-
 .order-details {
     flex: 1;
     padding: 0 20px;
@@ -189,7 +163,6 @@ export default {
     border-radius: 4px;
     cursor: pointer;
     margin-right: 10px;
-
 }
 
 .order-action button:hover {
@@ -237,7 +210,6 @@ export default {
     color: white;
 }
 
-/* Scrollable content */
 .scrollable-content {
     width: 100%;
     height: 80vh;
@@ -246,7 +218,6 @@ export default {
     padding: 10px;
 }
 
-/* Custom scrollbar */
 .scrollable-content::-webkit-scrollbar {
     width: 8px;
 }
@@ -258,5 +229,37 @@ export default {
 
 .scrollable-content::-webkit-scrollbar-thumb:hover {
     background-color: #ffffff;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>
