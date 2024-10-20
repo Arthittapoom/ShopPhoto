@@ -5,19 +5,25 @@
         <div class="order-list container scrollable-content">
             <!-- Orders Loop -->
             <div v-for="(order, index) in orders" :key="index" class="order-item">
-                <div class="order-image">
+                <!-- <div class="order-image">
                     <img :src="order.image" alt="Order Image" />
-                </div>
+                </div> -->
                 <div class="order-details">
-                    <p><strong>Media name:</strong> {{ order.mediaName }}</p>
-                    <p><strong>Media Category:</strong> {{ order.mediaCategory }}</p>
-                    <p><strong>Media watermark:</strong> {{ order.mediaWatermark }}</p>
+                    <p><strong>email: </strong> {{ order.email ? order.email : 'No email' }}</p>
+                    <p><strong>Total photos: </strong> {{ order.order ? order.order.length : 0 }}</p>
+                    <!-- ตรวจสอบว่ามี order และเป็นอาเรย์ -->
+                    <p><strong>Price photos:</strong> {{ order.selectedSubtotal }} THB</p>
                 </div>
+
                 <div class="order-details">
-                    <p><strong>Media type:</strong> {{ order.mediaType }}</p>
-                    <p><strong>Media price:</strong> {{ order.mediaPrice }}</p>
-                    <p><strong>Media License:</strong> {{ order.mediaLicense }}</p>
+                    <p><strong>bank slip:</strong> {{ order.transfer && order.transfer.bank ? order.transfer.bank
+                        : 'N/A' }}</p>
+                    <p><strong>name slip:</strong> {{ order.transfer && order.transfer.name ? order.transfer.name :
+                        'N/A' }}</p>
+                    <p><strong>date slip:</strong> {{ order.transfer && order.transfer.date ? order.transfer.date :
+                        'N/A' }}</p>
                 </div>
+
                 <div class="order-action">
                     <button @click="openModal(order)">Transfer slip</button>
                 </div>
@@ -28,7 +34,7 @@
         <div v-if="showModal" class="modal-overlay">
             <div class="modal-content">
                 <h3>Transfer slip</h3>
-                <img :src="selectedOrder.image" alt="Order Slip" />
+                <img :src="selectedOrder.slipImageUrl" alt="Order Slip" />
                 <div class="modal-actions">
                     <button class="cancel-button" @click="closeModal">Cancel</button>
                     <button class="confirm-button" @click="confirmOrder">Confirm</button>
@@ -39,6 +45,8 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
+import firebase from '~/plugins/firebase.js';
 export default {
     layout: 'MenuBar',
 
@@ -93,7 +101,19 @@ export default {
         };
     },
 
+    mounted() {
+        this.fetchOrders();
+    },
+
     methods: {
+        async fetchOrders() {
+            firebase.database().ref('payments').on('value', (snapshot) => {
+                this.orders = [];
+                this.orders = snapshot.val();
+                console.log(this.orders);
+            });
+        },
+
         openModal(order) {
             this.selectedOrder = order;
             this.showModal = true;
@@ -150,7 +170,7 @@ export default {
     border-radius: 4px;
     cursor: pointer;
     margin-right: 10px;
-    
+
 }
 
 .order-action button:hover {

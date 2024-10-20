@@ -126,6 +126,7 @@ export default {
       file: null,  // เก็บไฟล์ที่เลือก
       loading: false,  // สถานะการอัพโหลดไฟล์
       uid: '',
+      email: '',
     };
   },
   async mounted() {
@@ -144,6 +145,8 @@ export default {
 
       // ตรวจสอบว่ามี multiFactor ก่อนเข้าถึง uid
       if (user.multiFactor) {
+        this.email = user.multiFactor.user.email;
+        // console.log("User email:", this.email);
         this.uid = user.multiFactor.user.uid;
         await this.fetchCartItems(this.uid); // ดึงข้อมูลจาก Firebase เมื่อ component ถูกสร้างขึ้น
       } else {
@@ -261,11 +264,12 @@ export default {
 
         // สร้างข้อมูลการชำระเงิน
         const Payment = {
-          ...this.transfer,
+          transfer: this.transfer,
           selectedSubtotal: this.selectedSubtotal,
-          slipImageUrl: this.slipImageUrl,  // ใช้ URL จาก Firebase
-          ...this.selectedItems,
-          uid: this.uid
+          slipImageUrl: this.slipImageUrl,
+          order: this.selectedItems,
+          uid: this.uid,
+          email : this.email
         };
 
         // console.log(Payment)
