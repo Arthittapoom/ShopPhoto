@@ -269,8 +269,14 @@ export default {
           slipImageUrl: this.slipImageUrl,
           order: this.selectedItems,
           uid: this.uid,
-          email : this.email
+          email : this.email,
+          status : 'Waiting confirmation'
         };
+
+        if (!Payment.transfer || !Payment.order || !Payment.uid) {
+          Swal.fire('Error', 'Please fill in all required fields.', 'error');
+          return;
+        }
 
         // console.log(Payment)
 

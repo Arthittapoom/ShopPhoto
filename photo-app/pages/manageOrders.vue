@@ -26,6 +26,7 @@
 
                 <div class="order-action">
                     <button @click="openModal(order)">Transfer slip</button>
+                    <p><strong>status:</strong> {{ order.status || 'N/A' }}</p>
                 </div>
             </div>
         </div>
@@ -108,11 +109,18 @@ export default {
     methods: {
         async fetchOrders() {
             firebase.database().ref('payments').on('value', (snapshot) => {
-                this.orders = [];
-                this.orders = snapshot.val();
-                console.log(this.orders);
+                this.orders = []; // ล้างข้อมูลเก่า
+                snapshot.forEach((childSnapshot) => {
+                    const orderData = {
+                        ...childSnapshot.val(), // ดึงข้อมูลของแต่ละออบเจ็กต์
+                        id: childSnapshot.key   // เพิ่มคีย์ลงในข้อมูลของแต่ละรายการ
+                    };
+                    this.orders.push(orderData); // เพิ่มรายการนี้ในอาเรย์ orders
+                });
+                // console.log(this.orders); // ตรวจสอบข้อมูล
             });
         },
+
 
         openModal(order) {
             this.selectedOrder = order;
@@ -124,7 +132,18 @@ export default {
         },
         confirmOrder() {
             // Handle order confirmation logic here
-            console.log('Order confirmed:', this.selectedOrder);
+            // console.log('Order confirmed:', this.selectedOrder.order);
+            this.selectedOrder.order.forEach((item) => {
+                firebase.database().ref('carts/' + item.id).update({
+                    status: 'confirmation'
+                })
+            })
+
+            // update status payments to confirmation
+            firebase.database().ref('payments/' + this.selectedOrder.id).update({
+                status: 'confirmation'
+            })
+
             this.closeModal();
         },
     },
