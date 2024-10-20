@@ -75,6 +75,12 @@ export default {
       }).then((result) => {
         if (result.isConfirmed) {
           firebase.auth().signOut();
+          this.$router.push('/login');
+          Swal.fire(
+            'ออกจากระบบสําเร็จ',
+            'คุณได้ออกจากระบบแล้ว',
+            'success'
+          );
         }
       })
     }

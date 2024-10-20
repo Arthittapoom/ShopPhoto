@@ -283,6 +283,12 @@ export default {
         // บันทึกข้อมูลการชำระเงิน (คุณสามารถปรับให้เก็บลง Firebase Database หรืออื่นๆ ได้ตามต้องการ)
         await firebase.database().ref('payments').push(Payment);
 
+        // ล้างข้อมูลใน this.transfer และ this.selectedItems และ this.slipImageUrl
+        this.transfer = {};
+        this.selectedItems = [];
+        this.slipImageUrl = null;
+        
+
         // แสดงข้อความเมื่อบันทึกเรียบร้อย
         Swal.fire('Success', 'Payment processed successfully!', 'success');
 
