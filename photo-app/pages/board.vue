@@ -125,56 +125,54 @@ export default {
 
     // ฟังก์ชันแสดงรายละเอียดของรูปภาพด้วย Swal.fire
     showImageDetails(image) {
-  this.selectedImage = image;
+      this.selectedImage = image;
 
-  Swal.fire({
-    title: image.mediaName,
-    html: `
+      Swal.fire({
+        title: image.mediaName,
+        html: `
       <img src="${image.imagePreview}" alt="${image.mediaName}" style="width: 100%; height: auto; max-height: 60vh; object-fit: contain; margin-bottom: 15px;" />
       <p><strong>Categories:</strong> ${image.mediaCategories}</p>
       <p><strong>License:</strong> ${image.mediaLicense}</p>
       <p><strong>Price:</strong> ${image.mediaPrice}</p>
     `,
-    showCancelButton: true,
-    confirmButtonText: 'ตกลง',
-    cancelButtonText: 'กลับ',
-    width: '50%',
-    padding: '1rem',
-    backdrop: `rgba(0, 0, 0, 0.7)`,
-    preConfirm: async () => {
-      try {
-        // ดึงข้อมูลผู้ใช้ที่กดปุ่ม "ตกลง"
-        const dbRef = firebase.database().ref('users');
-        const snapshot = await dbRef.once('value'); // ดึงข้อมูลแค่ครั้งเดียว
-        const data = snapshot.val();
+        showCancelButton: true,
+        confirmButtonText: 'ตกลง',
+        cancelButtonText: 'กลับ',
+        width: '50%',
+        padding: '1rem',
+        backdrop: `rgba(0, 0, 0, 0.7)`,
+        preConfirm: async () => {
+          try {
+            const user = await firebase.auth().currentUser;
 
-        if (data) {
-          const users = Object.values(data);
-          const user = users.find((user) => user.userId === image.userId);
+            if (user) {
+              const userId = await user.multiFactor.user.uid
+              if (userId) {
+                // รวมข้อมูลผู้ใช้กับข้อมูลรูปภาพที่เลือก
+                const selectedUser = {
+                  userId: userId,
+                  Image: this.selectedImage.id,
+                  status: 'Not paid',
+                };
 
-          if (user) {
-            // รวมข้อมูลผู้ใช้กับข้อมูลรูปภาพที่เลือก
-            const selectedUser = {
-              ...user,
-              selectedImage: this.selectedImage // เก็บ selectedImage ไว้ใน selectedUser
-            };
+                // console.log(selectedUser);
 
-            // บันทึกข้อมูลใน Firebase Realtime Database
-            const orderRef = firebase.database().ref('carts');
-            await orderRef.push(selectedUser); // ใช้ push เพื่อเพิ่มข้อมูลใหม่ใน orders
+                // // บันทึกข้อมูลใน Firebase Realtime Database
+                const orderRef = firebase.database().ref('carts');
+                await orderRef.push(selectedUser); // ใช้ push เพื่อเพิ่มข้อมูลใหม่ใน orders
 
-            // แสดงผลเมื่อสำเร็จ
-            Swal.fire('Selected Image', 'You have selected this image.', 'success');
-          } else {
-            throw new Error('User not found');
+                // แสดงผลเมื่อสำเร็จ
+                Swal.fire('Selected Image', 'You have selected this image.', 'success');
+              } else {
+                throw new Error('User not found');
+              }
+            }
+          } catch (error) {
+            Swal.fire('Error', error.message, 'error');
           }
         }
-      } catch (error) {
-        Swal.fire('Error', error.message, 'error');
-      }
-    }
-  });
-},
+      });
+    },
 
 
 
