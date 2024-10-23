@@ -19,8 +19,11 @@
         <button v-for="tag in availableCategories" :key="tag" @click="filterByTag(tag)">
           {{ tag }}
         </button>
+        <!-- ปุ่ม 'ทั้งหมด' เพื่อแสดงภาพถ่ายทั้งหมด -->
+        <button @click="showAllImages">ทั้งหมด</button>
       </div>
     </section>
+
 
     <!-- Dynamic Image Grid -->
     <section class="image-grid-section">
@@ -186,6 +189,13 @@ export default {
       });
 
     },
+
+    // แสดงภาพถ่ายทั้งหมดเมื่อกดปุ่ม 'ทั้งหมด'
+    showAllImages() {
+      this.filteredImages = this.images;
+    },
+
+
 
 
 

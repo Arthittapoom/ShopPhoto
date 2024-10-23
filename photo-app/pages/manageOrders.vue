@@ -69,14 +69,13 @@ export default {
                             ...childSnapshot.val(),
                             id: childSnapshot.key,
                         };
-                        this.orders.push(orderData); // เพิ่มข้อมูลใหม่ที่ดึงมา
+                        this.orders.unshift(orderData); // เพิ่มข้อมูลใหม่ที่ดึงมาให้อยู่ที่ตำแหน่งแรก
                     });
                 });
             } catch (error) {
                 console.error(error);
             }
         },
-
 
         showTransferSlip(order) {
             Swal.fire({

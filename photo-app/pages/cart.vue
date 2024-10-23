@@ -186,31 +186,40 @@ export default {
 
       await firebase.database().ref('carts').on('value', (snapshot) => {
         if (!uid) {
-          Swal.fire('warning', '', 'warning');
+          Swal.fire('Warning', 'User ID is missing', 'warning');
           return;
         }
+
         this.cartItems = [];
         const data = snapshot.val();
-        Object.entries(data).forEach(([cartid, item]) => {
-          if (item.userId === uid) {
-            firebase.database().ref('photos/' + item.Image).once('value', (snapshot) => {
-              const imageData = snapshot.val();
-              this.cartItems.push({
-                image: imageData.imagePreview,
-                mediaType: imageData.mediaType,
-                licenseType: imageData.mediaLicense,
-                price: imageData.mediaPrice,
-                status: item.status || 'Not paid',
-                selected: false,
-                id: cartid,
-                mediaWatermark: imageData.mediaWatermark,
+
+        // ตรวจสอบว่า data ไม่เป็น null หรือ undefined ก่อน
+        if (data) {
+          Object.entries(data).forEach(([cartid, item]) => {
+            if (item.userId === uid) {
+              firebase.database().ref('photos/' + item.Image).once('value', (snapshot) => {
+                const imageData = snapshot.val();
+                this.cartItems.push({
+                  image: imageData.imagePreview,
+                  mediaType: imageData.mediaType,
+                  licenseType: imageData.mediaLicense,
+                  price: imageData.mediaPrice,
+                  status: item.status || 'Not paid',
+                  selected: false,
+                  id: cartid,
+                  mediaWatermark: imageData.mediaWatermark,
+                });
               });
-            });
-          }
-        });
+            }
+          });
+        } else {
+          console.warn('No cart data found.');
+        }
+
         this.loading = false;
       });
     },
+
 
     handleFileUpload(event) {
       const file = event.target.files[0];

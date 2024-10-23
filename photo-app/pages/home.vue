@@ -112,8 +112,8 @@ export default {
     },
 
     toggleAnswer(faq) {
-    faq.showAnswer = !faq.showAnswer;
-  },
+      faq.showAnswer = !faq.showAnswer;
+    },
     // Fetch gallery images from Firebase
     fetchGalleryImages() {
       firebase.database().ref('photos').on('value', (snapshot) => {
@@ -134,17 +134,22 @@ export default {
     fetchCategoriesWithImages(images) {
       firebase.database().ref('categories').on('value', (snapshot) => {
         const categories = snapshot.val();
-        const categoriesWithImages = categories.map(category => {
-          const categoryImages = images.filter(image =>
-            image.mediaCategories && image.mediaCategories.includes(category)
-          );
-          // Return category with the first image as representative
-          return {
-            name: category,
-            imagePreview: categoryImages.length > 0 ? categoryImages[0].imagePreview : '',
-          };
-        }).filter(category => category.imagePreview !== ''); // Only show categories with images
-        this.categoriesWithImages = categoriesWithImages;
+
+        // ตรวจสอบให้แน่ใจว่า categories ไม่เป็น null หรือ undefined ก่อนใช้งาน map
+        if (categories) {
+          const categoriesWithImages = categories.map(category => {
+            const categoryImages = images.filter(image =>
+              image.mediaCategories && image.mediaCategories.includes(category)
+            );
+            return {
+              name: category,
+              imagePreview: categoryImages.length > 0 ? categoryImages[0].imagePreview : '',
+            };
+          }).filter(category => category.imagePreview !== '');
+          this.categoriesWithImages = categoriesWithImages;
+        } else {
+          console.warn("No categories found.");
+        }
       });
     },
 
@@ -166,10 +171,11 @@ export default {
 
     // Handle search functionality
     handleSearch() {
-      const query = this.searchQuery.toLowerCase();
-      this.galleryImages = this.galleryImages.filter(image =>
-        image.mediaName.toLowerCase().includes(query)
-      );
+      this.$router.push("/board");
+      // const query = this.searchQuery.toLowerCase();
+      // this.galleryImages = this.galleryImages.filter(image =>
+      //   image.mediaName.toLowerCase().includes(query)
+      // );
     },
 
     // Toggle FAQ answer visibility
@@ -283,11 +289,13 @@ export default {
   line-height: 1.6;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.5s;
 }
 
-.fade-enter, .fade-leave-to {
+.fade-enter,
+.fade-leave-to {
   opacity: 0;
 }
 
